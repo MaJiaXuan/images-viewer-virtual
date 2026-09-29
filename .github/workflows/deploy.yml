@@ -2,7 +2,7 @@ name: Deploy VitePress to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
 
   # 允许手动触发
   workflow_dispatch:
