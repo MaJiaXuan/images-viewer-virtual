@@ -114,8 +114,10 @@ export default {
     images: { type: Array, default: () => [] },
     initialViewIndex: { type: Number, default: 0 },
   },
-  data() {
-    return { viewer: null }
+  // viewer 实例不需要响应式，不要放进 data（Vue 2 会递归给实例加 getter/setter），
+  // 改为在 created 中挂载为普通实例属性
+  created() {
+    this.viewer = null
   },
   beforeDestroy() {
     if (this.viewer) {
@@ -176,7 +178,7 @@ export function closeGallery() {
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { onUnmounted } from 'vue'
 import ImagesViewer from 'images-viewer-virtual'
 
 const props = defineProps({
@@ -184,23 +186,25 @@ const props = defineProps({
   initialViewIndex: { type: Number, default: 0 },
 })
 
-const viewer = ref(null)
+// viewer 实例不需要响应式，不要用 ref 包裹（ref 会递归转为响应式对象，纯增开销），
+// 直接使用普通变量即可
+let viewer = null
 
 const openViewer = () => {
-  if (viewer.value) viewer.value.hide()
-  viewer.value = new ImagesViewer({
+  if (viewer) viewer.hide()
+  viewer = new ImagesViewer({
     images: props.images,
     initialViewIndex: props.initialViewIndex,
     onClose: () => {
-      viewer.value = null
+      viewer = null
     },
   })
 }
 
 onUnmounted(() => {
-  if (viewer.value) {
-    viewer.value.hide()
-    viewer.value = null
+  if (viewer) {
+    viewer.hide()
+    viewer = null
   }
 })
 </script>
@@ -265,7 +269,7 @@ export class GalleryComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this.viewer.hide()
+    this.viewer.close()
   }
 }
 ```
@@ -354,7 +358,7 @@ export class GalleryComponent implements OnDestroy {
    // React
    useEffect(() => () => { if (viewerRef.current) viewerRef.current.hide() }, [])
    // Vue 3
-   onUnmounted(() => { if (viewer.value) viewer.value.hide() })
+   onUnmounted(() => { if (viewer) viewer.hide() })
    // Angular
    ngOnDestroy() { if (this.viewer) this.viewer.hide() }
    ```

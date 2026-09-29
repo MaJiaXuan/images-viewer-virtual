@@ -3,24 +3,27 @@ layout: home
 
 hero:
   name: ImagesViewer
-  text: 原生图片查看器
+  text: viewer.js 性能延伸版
   image:
     src: /logo.svg
     alt: ImagesViewer
-  tagline: 零依赖轻量图片查看器 · 虚拟列表轻松承载万级图集 · 滚轮缩放 / 拖拽平移 / 全键盘操作 · 任意框架开箱即用
+  tagline: 在 viewer.js 的基础上为性能而生 — 虚拟列表轻松承载万级图集 · API 设计对齐 viewer.js，零依赖、任意框架开箱即用
   actions:
     - theme: brand
       text: 快速开始
       link: /guide/getting-started
     - theme: alt
       text: 在线演示
-      link: /images-viewer-virtual/demo.html
+      link: /demo.html
     - theme: alt
       text: GitHub
       link: https://github.com/MaJiaXuan/images-viewer-virtual
 
 features:
   - icon: 🚀
+    title: viewer.js 延伸
+    details: API 设计全面对齐 viewer.js，熟悉 viewer.js 可零成本迁移，同时补齐虚拟列表与万级图集能力
+  - icon: 📦
     title: 虚拟列表
     details: 缩略图栏只渲染视口内 DOM 节点，通过对象池复用，万级图集依然流畅不卡顿
   - icon: ⚡

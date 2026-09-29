@@ -2,7 +2,7 @@
 
 以下是 ImagesViewer 的版本更新记录。完整变更记录请查看项目根目录的 [CHANGELOG.md](https://github.com/MaJiaXuan/images-viewer-virtual/blob/main/CHANGELOG.md)。
 
-## 2.0.0 (未发布)
+## 1.0.1 (未发布)
 
 ### 破坏性变更
 
