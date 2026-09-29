@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.0 (未发布)
+
+### 破坏性变更
+
+- 移除 LRU 图片缓存（`maxCacheSize`）与手动预加载（`preloadCount`），主图与缩略图统一由浏览器原生 lazy loading 调度
+- 关闭 API 收敛为 `hide()`，移除 `close()` / `destroy()` 别名；移除 `goTo()`（使用 `view(index)`）
+- 所有回调入参统一为 `{ viewer, index, image, total, ...事件特有字段 }`；`onCounter` 的 `currentPage/totalPages` 更名为 `index/total`
+- 移除从未生效的 `onThumbnailError` / `onZoomIndicator` 选项
+
+### 改进
+
+- 所有实例方法支持链式调用，对齐 viewer.js API 设计
+
 ## 1.0.0 (2024-06-22)
 
 ### 特性

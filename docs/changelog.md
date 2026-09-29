@@ -2,6 +2,14 @@
 
 以下是 ImagesViewer 的版本更新记录。完整变更记录请查看项目根目录的 [CHANGELOG.md](https://github.com/MaJiaXuan/images-viewer-virtual/blob/main/CHANGELOG.md)。
 
+## 2.0.0 (未发布)
+
+### 破坏性变更
+
+- 移除 LRU 图片缓存与手动预加载，改由浏览器原生 lazy loading 调度
+- 关闭 API 收敛为 `hide()`，移除 `close()` / `destroy()` 别名；移除 `goTo()`
+- 所有回调入参统一为 `{ viewer, index, image, total, ... }`
+
 ## 1.0.0 (2024-06-22)
 
 ### 特性

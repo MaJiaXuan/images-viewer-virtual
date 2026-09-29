@@ -288,15 +288,14 @@
     <div class="container">
       <h1>ImagesViewer API 文档与完整演示</h1>
       <p class="subtitle">
-        原生 JavaScript 图片查看器，支持虚拟列表、LRU 缓存、手势拖拽与键盘快捷键。<br />
+        原生 JavaScript 图片查看器，支持虚拟列表、浏览器懒加载、手势拖拽与键盘快捷键。<br />
         不依赖 Vue / React / Angular，可在任何前端项目中直接使用。
       </p>
 
       <div class="stats-bar">
         <span>共生成 <strong>1000</strong> 张测试图片</span>
         <span>缩略图虚拟列表只渲染约 <strong>15</strong> 个 DOM 节点</span>
-        <span>LRU 缓存最多 <strong>20</strong> 张大图</span>
-        <span>预加载相邻 <strong>2</strong> 张</span>
+        <span>浏览器原生懒加载，零手动缓存管理</span>
       </div>
 
       <div class="card-grid" id="grid"></div>
@@ -595,7 +594,7 @@ export function unmount() {
 // 销毁时会自动清理：
 // - 所有 document / stage 事件监听
 // - 所有 setTimeout（zoomTimer、retryTimer）
-// - LRU 缓存与图片内存
+// - 所有图片（img lazy 属性交给浏览器释放）
 // - 虚拟列表 DOM 与对象池
 // - body.overflow 原始状态</pre
       >
@@ -741,7 +740,7 @@ const viewer = new ImagesViewer({
 
       <!-- ===== 示例 22：10000 张图片 ===== -->
       <h2 id="example-10000">示例 22：10000 张图片</h2>
-      <p>10000 张图片的极端测试，验证虚拟列表和 LRU 缓存的稳定性。</p>
+      <p>10000 张图片的极端测试，验证虚拟列表和懒加载的稳定性。</p>
       <pre class="code-block">
 const viewer = new ImagesViewer({
   images: images10000,
@@ -1270,7 +1269,7 @@ export function unmount() {
       >
 
       <footer>
-        ImagesViewer · 纯原生 JavaScript · 虚拟列表 · LRU 缓存 ·
+        ImagesViewer · 纯原生 JavaScript · 虚拟列表 · 懒加载 ·
         <a href="https://github.com/MaJiaXuan/images-viewer-virtual">GitHub</a>
       </footer>
     </div>
