@@ -1,0 +1,588 @@
+:root {
+  /* 亮色 - 基础色板 */
+  --iv-tech-bg: #fff;
+  --iv-tech-bg-alt: #f5f5f7;
+  --iv-tech-bg-elv: #fafafa;
+  --iv-tech-bg-soft: #f5f5f7;
+  --iv-tech-bg-code: #f5f5f7;
+  --iv-tech-bg-code-block: #f0f0f2;
+  --iv-tech-text-1: #1d1d1f;
+  --iv-tech-text-2: #4a4a5e;
+  --iv-tech-text-3: #8a8a9e;
+  --iv-tech-text-mute: #6a6a80;
+  --iv-tech-brand: #0071e3;
+  --iv-tech-brand-hover: #005bb5;
+  --iv-tech-brand-active: #004a94;
+  --iv-tech-brand-soft: rgb(0 113 227 / 12%);
+  --iv-tech-brand-glow: rgb(0 113 227 / 25%);
+  --iv-tech-divider: #e5e5e8;
+  --iv-tech-border: #e5e5e8;
+  --iv-tech-border-hover: #0071e3;
+  --iv-tech-danger: #e53935;
+  --iv-tech-danger-soft: rgb(229 57 53 / 12%);
+  --iv-tech-warning: #f57c00;
+  --iv-tech-warning-soft: rgb(245 124 0 / 12%);
+  --iv-tech-tip: #0071e3;
+  --iv-tech-tip-soft: rgb(0 113 227 / 12%);
+  --iv-tech-shadow: rgb(0 0 0 / 6%);
+  --iv-tech-shadow-hover: rgb(0 0 0 / 12%);
+  --iv-tech-glow: rgb(0 113 227 / 15%);
+  --iv-tech-scrollbar-track: #f5f5f7;
+  --iv-tech-scrollbar-thumb: #c0c0c8;
+  --iv-tech-scrollbar-thumb-hover: #0071e3;
+
+  /* VitePress 变量映射 */
+  --vp-c-bg: var(--iv-tech-bg);
+  --vp-c-bg-alt: var(--iv-tech-bg-alt);
+  --vp-c-bg-elv: var(--iv-tech-bg-elv);
+  --vp-c-bg-soft: var(--iv-tech-bg-soft);
+  --vp-c-text-1: var(--iv-tech-text-1);
+  --vp-c-text-2: var(--iv-tech-text-2);
+  --vp-c-text-3: var(--iv-tech-text-3);
+  --vp-c-brand-1: var(--iv-tech-brand);
+  --vp-c-brand-2: var(--iv-tech-brand-hover);
+  --vp-c-brand-3: var(--iv-tech-brand-active);
+  --vp-c-brand-soft: var(--iv-tech-brand-soft);
+  --vp-c-divider: var(--iv-tech-divider);
+  --vp-c-gutter: var(--iv-tech-divider);
+  --vp-c-danger-1: var(--iv-tech-danger);
+  --vp-c-danger-2: var(--iv-tech-danger);
+  --vp-c-danger-3: var(--iv-tech-danger);
+  --vp-c-danger-soft: var(--iv-tech-danger-soft);
+  --vp-c-warning-1: var(--iv-tech-warning);
+  --vp-c-warning-2: var(--iv-tech-warning);
+  --vp-c-warning-3: var(--iv-tech-warning);
+  --vp-c-warning-soft: var(--iv-tech-warning-soft);
+  --vp-c-tip-1: var(--iv-tech-tip);
+  --vp-c-tip-2: var(--iv-tech-tip);
+  --vp-c-tip-3: var(--iv-tech-tip);
+  --vp-c-tip-soft: var(--iv-tech-tip-soft);
+  --vp-button-brand-bg: var(--iv-tech-brand);
+  --vp-button-brand-hover-bg: var(--iv-tech-brand-hover);
+  --vp-button-brand-active-bg: var(--iv-tech-brand-active);
+  --vp-button-brand-text: #fff;
+  --vp-code-color: var(--iv-tech-brand);
+  --vp-code-bg: var(--iv-tech-bg-code);
+  --vp-code-block-bg: var(--iv-tech-bg-code-block);
+  --vp-code-block-divider-color: var(--iv-tech-divider);
+  --vp-code-line-highlight-color: var(--iv-tech-brand-soft);
+  --vp-code-line-number-color: var(--iv-tech-text-3);
+  --vp-code-copy-code-bg: var(--iv-tech-bg-elv);
+  --vp-code-copy-code-hover-bg: var(--iv-tech-bg-soft);
+  --vp-code-copy-code-active-text: var(--iv-tech-brand);
+  --vp-c-bg-mute: var(--iv-tech-bg-soft);
+  --vp-c-text-inverse-1: var(--iv-tech-bg);
+  --vp-c-text-inverse-2: var(--iv-tech-bg-alt);
+}
+
+html.dark {
+  /* 暗色 - 科技蓝黑 */
+  --iv-tech-bg: #0a0a0f;
+  --iv-tech-bg-alt: #111118;
+  --iv-tech-bg-elv: #1a1a28;
+  --iv-tech-bg-soft: #14141e;
+  --iv-tech-bg-code: #14141e;
+  --iv-tech-bg-code-block: #0d0d14;
+  --iv-tech-text-1: #e0e0e8;
+  --iv-tech-text-2: #a0a0b8;
+  --iv-tech-text-3: #6a6a80;
+  --iv-tech-text-mute: #4a4a5e;
+  --iv-tech-brand: #4a9eff;
+  --iv-tech-brand-hover: #3a8eef;
+  --iv-tech-brand-active: #2a7edf;
+  --iv-tech-brand-soft: rgb(74 158 255 / 15%);
+  --iv-tech-brand-glow: rgb(74 158 255 / 30%);
+  --iv-tech-divider: #2a2a3e;
+  --iv-tech-border: #2a2a3e;
+  --iv-tech-border-hover: #4a9eff;
+  --iv-tech-danger: #ff6b6b;
+  --iv-tech-danger-soft: rgb(255 107 107 / 15%);
+  --iv-tech-warning: #ffb347;
+  --iv-tech-warning-soft: rgb(255 179 71 / 15%);
+  --iv-tech-tip: #4a9eff;
+  --iv-tech-tip-soft: rgb(74 158 255 / 15%);
+  --iv-tech-shadow: rgb(0 0 0 / 30%);
+  --iv-tech-shadow-hover: rgb(0 0 0 / 50%);
+  --iv-tech-glow: rgb(74 158 255 / 15%);
+  --iv-tech-scrollbar-track: #0a0a0f;
+  --iv-tech-scrollbar-thumb: #2a2a3e;
+  --iv-tech-scrollbar-thumb-hover: #4a9eff;
+
+  /* VitePress 变量映射 */
+  --vp-c-bg: var(--iv-tech-bg);
+  --vp-c-bg-alt: var(--iv-tech-bg-alt);
+  --vp-c-bg-elv: var(--iv-tech-bg-elv);
+  --vp-c-bg-soft: var(--iv-tech-bg-soft);
+  --vp-c-text-1: var(--iv-tech-text-1);
+  --vp-c-text-2: var(--iv-tech-text-2);
+  --vp-c-text-3: var(--iv-tech-text-3);
+  --vp-c-brand-1: var(--iv-tech-brand);
+  --vp-c-brand-2: var(--iv-tech-brand-hover);
+  --vp-c-brand-3: var(--iv-tech-brand-active);
+  --vp-c-brand-soft: var(--iv-tech-brand-soft);
+  --vp-c-divider: var(--iv-tech-divider);
+  --vp-c-gutter: var(--iv-tech-divider);
+  --vp-c-danger-1: var(--iv-tech-danger);
+  --vp-c-danger-2: var(--iv-tech-danger);
+  --vp-c-danger-3: var(--iv-tech-danger);
+  --vp-c-danger-soft: var(--iv-tech-danger-soft);
+  --vp-c-warning-1: var(--iv-tech-warning);
+  --vp-c-warning-2: var(--iv-tech-warning);
+  --vp-c-warning-3: var(--iv-tech-warning);
+  --vp-c-warning-soft: var(--iv-tech-warning-soft);
+  --vp-c-tip-1: var(--iv-tech-tip);
+  --vp-c-tip-2: var(--iv-tech-tip);
+  --vp-c-tip-3: var(--iv-tech-tip);
+  --vp-c-tip-soft: var(--iv-tech-tip-soft);
+  --vp-button-brand-bg: var(--iv-tech-brand);
+  --vp-button-brand-hover-bg: var(--iv-tech-brand-hover);
+  --vp-button-brand-active-bg: var(--iv-tech-brand-active);
+  --vp-button-brand-text: #fff;
+  --vp-code-color: #ff79c6;
+  --vp-code-bg: var(--iv-tech-bg-code);
+  --vp-code-block-bg: var(--iv-tech-bg-code-block);
+  --vp-code-block-divider-color: var(--iv-tech-divider);
+  --vp-code-line-highlight-color: var(--iv-tech-brand-soft);
+  --vp-code-line-number-color: var(--iv-tech-text-3);
+  --vp-code-copy-code-bg: var(--iv-tech-bg-elv);
+  --vp-code-copy-code-hover-bg: var(--iv-tech-bg-soft);
+  --vp-code-copy-code-active-text: var(--iv-tech-brand);
+  --vp-c-bg-mute: var(--iv-tech-bg-soft);
+  --vp-c-text-inverse-1: var(--iv-tech-bg);
+  --vp-c-text-inverse-2: var(--iv-tech-bg-alt);
+}
+
+/* ==================== 全局基础 ==================== */
+body {
+  background: var(--iv-tech-bg) !important;
+  color: var(--iv-tech-text-1) !important;
+}
+
+/* 选中文字 */
+::selection {
+  background: var(--iv-tech-brand-soft);
+  color: var(--iv-tech-text-1);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--iv-tech-scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--iv-tech-scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--iv-tech-scrollbar-thumb-hover);
+}
+
+/* ==================== 导航栏 ==================== */
+.VPNav {
+  background: var(--iv-tech-bg) !important;
+  border-bottom: 1px solid var(--iv-tech-divider) !important;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+
+html.dark .VPNav {
+  background: rgb(10 10 15 / 85%) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgb(42 42 62 / 50%) !important;
+}
+
+.VPNavBarTitle .title {
+  color: var(--iv-tech-brand) !important;
+  font-weight: 700 !important;
+  transition: text-shadow 0.3s ease;
+}
+
+.VPFeature .title {
+  color: var(--iv-tech-text-1) !important;
+  font-weight: 600 !important;
+}
+
+.VPDocFooter .pager-link .title {
+  color: var(--iv-tech-text-1) !important;
+}
+
+html.dark .VPNavBarTitle .title {
+  text-shadow: 0 0 10px rgb(74 158 255 / 30%);
+}
+
+.VPNavBarMenuLink {
+  color: var(--iv-tech-text-2) !important;
+  transition: color 0.2s ease;
+}
+
+.VPNavBarMenuLink:hover {
+  color: var(--iv-tech-brand) !important;
+}
+
+.VPNavBarMenuLink.active {
+  color: var(--iv-tech-brand) !important;
+}
+
+/* ==================== 侧边栏 ==================== */
+.VPSidebar {
+  background: var(--iv-tech-bg) !important;
+  border-right: 1px solid var(--iv-tech-divider) !important;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.VPSidebarItem .item {
+  color: var(--iv-tech-text-2) !important;
+  transition: all 0.2s ease;
+}
+
+.VPSidebarItem .item:hover {
+  color: var(--iv-tech-brand) !important;
+  background: var(--iv-tech-brand-soft) !important;
+  border-radius: 6px;
+}
+
+.VPSidebarItem .item.is-active {
+  color: var(--iv-tech-brand) !important;
+  background: var(--iv-tech-brand-soft) !important;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+/* ==================== 主内容区 ==================== */
+.VPContent {
+  background: var(--iv-tech-bg) !important;
+}
+
+.VPDoc h1 {
+  color: var(--iv-tech-text-1);
+  border-bottom: 1px solid var(--iv-tech-divider);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.VPDoc h2 {
+  color: var(--iv-tech-text-1);
+  border-bottom: 1px solid var(--iv-tech-divider);
+  padding-bottom: 0.3rem;
+  margin-top: 2.5rem;
+}
+
+.VPDoc h3 {
+  color: var(--iv-tech-text-1);
+  margin-top: 2rem;
+}
+
+.VPDoc p {
+  color: var(--iv-tech-text-2);
+  line-height: 1.8;
+}
+
+.VPDoc a {
+  color: var(--iv-tech-brand);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.VPDoc a:hover {
+  color: var(--iv-tech-brand-hover);
+  border-bottom: 1px solid var(--iv-tech-brand);
+}
+
+/* ==================== 代码块 ==================== */
+.VPCodeGroup {
+  background: var(--iv-tech-bg-code-block) !important;
+  border: 1px solid var(--iv-tech-divider) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.vp-code-group .tabs {
+  background: var(--iv-tech-bg-code) !important;
+  border-bottom: 1px solid var(--iv-tech-divider) !important;
+}
+
+.vp-code-group .tabs label {
+  color: var(--iv-tech-text-2) !important;
+  transition: all 0.2s ease;
+}
+
+.vp-code-group .tabs label.active {
+  color: var(--iv-tech-brand) !important;
+  background: var(--iv-tech-brand-soft) !important;
+}
+
+.vp-code-group .block {
+  background: var(--iv-tech-bg-code-block) !important;
+}
+
+div[class*='language-'] {
+  background: var(--iv-tech-bg-code-block) !important;
+  border: 1px solid var(--iv-tech-divider) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px var(--iv-tech-shadow) !important;
+  transition: box-shadow 0.3s ease;
+}
+
+html.dark div[class*='language-'] {
+  box-shadow:
+    0 4px 20px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 3%) !important;
+}
+
+div[class*='language-'] .line-numbers-wrapper {
+  border-right: 1px solid var(--iv-tech-divider) !important;
+}
+
+/* 内联代码 */
+.VPDoc :not(pre, h1, h2, h3, h4, h5, h6) > code {
+  background: var(--iv-tech-bg-code) !important;
+  color: var(--iv-tech-brand) !important;
+  border: 1px solid var(--iv-tech-divider) !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace !important;
+}
+
+html.dark .VPDoc :not(pre, h1, h2, h3, h4, h5, h6) > code {
+  color: #ff79c6 !important;
+}
+
+/* ==================== 表格 ==================== */
+.VPDoc table {
+  background: var(--iv-tech-bg-soft) !important;
+  border: 1px solid var(--iv-tech-divider) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.VPDoc th {
+  background: var(--iv-tech-bg-elv) !important;
+  color: var(--iv-tech-text-1) !important;
+  border-bottom: 1px solid var(--iv-tech-divider) !important;
+  font-weight: 600;
+}
+
+.VPDoc td {
+  border-bottom: 1px solid var(--iv-tech-divider) !important;
+  color: var(--iv-tech-text-2) !important;
+}
+
+.VPDoc tr:hover td {
+  background: var(--iv-tech-brand-soft) !important;
+}
+
+/* ==================== 自定义块 ==================== */
+.custom-block {
+  border-radius: 8px !important;
+  border-left: 4px solid !important;
+  background: var(--iv-tech-bg-soft) !important;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.custom-block.tip {
+  border-left-color: var(--iv-tech-tip) !important;
+  background: var(--iv-tech-tip-soft) !important;
+}
+
+.custom-block.warning {
+  border-left-color: var(--iv-tech-warning) !important;
+  background: var(--iv-tech-warning-soft) !important;
+}
+
+.custom-block.danger {
+  border-left-color: var(--iv-tech-danger) !important;
+  background: var(--iv-tech-danger-soft) !important;
+}
+
+.custom-block-title {
+  color: var(--iv-tech-text-1) !important;
+  font-weight: 600 !important;
+}
+
+/* ==================== 按钮 ==================== */
+.VPButton {
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+}
+
+.VPButton.brand {
+  background: var(--iv-tech-brand) !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px var(--iv-tech-glow) !important;
+}
+
+.VPButton.brand:hover {
+  background: var(--iv-tech-brand-hover) !important;
+  box-shadow: 0 0 25px var(--iv-tech-brand-glow) !important;
+  transform: translateY(-1px);
+}
+
+.VPButton.alt {
+  border: 1px solid var(--iv-tech-border) !important;
+  color: var(--iv-tech-text-2) !important;
+  background: var(--iv-tech-bg-elv) !important;
+}
+
+.VPButton.alt:hover {
+  border-color: var(--iv-tech-brand) !important;
+  color: var(--iv-tech-brand) !important;
+  background: var(--iv-tech-brand-soft) !important;
+}
+
+/* ==================== 首页 Hero ==================== */
+.VPHero .name {
+  color: var(--iv-tech-text-1) !important;
+}
+
+html.dark .VPHero .name {
+  text-shadow: 0 0 20px rgb(74 158 255 / 20%);
+}
+
+.VPHero .text {
+  color: var(--iv-tech-brand) !important;
+  background: linear-gradient(
+    90deg,
+    var(--iv-tech-brand),
+    var(--iv-tech-brand-hover),
+    var(--iv-tech-brand)
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.VPHero .tagline {
+  color: var(--iv-tech-text-2) !important;
+}
+
+/* ==================== Feature 卡片 ==================== */
+.VPFeature {
+  background: var(--iv-tech-bg-soft) !important;
+  border: 1px solid var(--iv-tech-border) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 20px var(--iv-tech-shadow) !important;
+}
+
+.VPFeature:hover {
+  border-color: var(--iv-tech-brand) !important;
+  box-shadow: 0 8px 30px var(--iv-tech-glow) !important;
+  transform: translateY(-2px);
+}
+
+.VPFeature .details {
+  color: var(--iv-tech-text-2) !important;
+  line-height: 1.6 !important;
+}
+
+.VPFeature .icon {
+  background: var(--iv-tech-brand-soft) !important;
+  border-radius: 8px !important;
+  font-size: 24px !important;
+}
+
+/* ==================== Footer ==================== */
+.VPFooter {
+  background: var(--iv-tech-bg) !important;
+  border-top: 1px solid var(--iv-tech-divider) !important;
+}
+
+.VPFooter .message {
+  color: var(--iv-tech-text-3) !important;
+}
+
+.VPFooter .copyright {
+  color: var(--iv-tech-text-mute) !important;
+}
+
+/* ==================== 搜索 ==================== */
+.DocSearch-Button {
+  background: var(--iv-tech-bg-elv) !important;
+  border: 1px solid var(--iv-tech-border) !important;
+  color: var(--iv-tech-text-2) !important;
+}
+
+.DocSearch-Button:hover {
+  border-color: var(--iv-tech-brand) !important;
+  box-shadow: 0 0 10px var(--iv-tech-glow) !important;
+}
+
+/* ==================== 目录 ==================== */
+.VPDocOutlineItem .outline-link {
+  color: var(--iv-tech-text-3) !important;
+  transition: all 0.2s ease;
+}
+
+.VPDocOutlineItem .outline-link:hover {
+  color: var(--iv-tech-brand) !important;
+}
+
+.VPDocOutlineItem .outline-link.active {
+  color: var(--iv-tech-brand) !important;
+}
+
+/* ==================== 分页 ==================== */
+.VPDocFooter .prev-next {
+  border-top: 1px solid var(--iv-tech-divider) !important;
+}
+
+.VPDocFooter .pager-link {
+  border: 1px solid var(--iv-tech-border) !important;
+  border-radius: 8px !important;
+  background: var(--iv-tech-bg-soft) !important;
+  transition: all 0.2s ease;
+}
+
+.VPDocFooter .pager-link:hover {
+  border-color: var(--iv-tech-brand) !important;
+  box-shadow: 0 0 15px var(--iv-tech-glow) !important;
+}
+
+.VPDocFooter .pager-link .desc {
+  color: var(--iv-tech-text-mute) !important;
+}
+
+/* ==================== 移动端 ==================== */
+.VPNavScreen {
+  background: var(--iv-tech-bg) !important;
+}
+
+html.dark .VPNavScreen {
+  background: rgb(10 10 15 / 95%) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+@media (width <= 768px) {
+  .VPNav {
+    backdrop-filter: blur(8px) !important;
+  }
+}
+
+/* ==================== 团队/关于页 ==================== */
+.VPTeamPage {
+  background: var(--iv-tech-bg) !important;
+}

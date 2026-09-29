@@ -1,0 +1,1822 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ImagesViewer API 文档与完整演示</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 40px 24px;
+        line-height: 1.6;
+      }
+      a {
+        color: #4a9eff;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      h1 {
+        margin-bottom: 8px;
+        font-size: 32px;
+      }
+      .subtitle {
+        color: #94a3b8;
+        margin-bottom: 40px;
+        font-size: 15px;
+      }
+      h2 {
+        font-size: 22px;
+        margin: 48px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #334155;
+      }
+      h3 {
+        font-size: 17px;
+        margin: 24px 0 12px;
+        color: #cbd5e1;
+      }
+      p {
+        color: #94a3b8;
+        margin-bottom: 12px;
+      }
+
+      .section {
+        margin-bottom: 40px;
+      }
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .card {
+        background: #1e293b;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+        border: 1px solid #334155;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: #4a9eff;
+      }
+      .card img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        display: block;
+      }
+      .card .title {
+        padding: 10px;
+        font-size: 13px;
+        color: #cbd5e1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .btn {
+        display: inline-block;
+        margin: 8px 8px 8px 0;
+        padding: 10px 18px;
+        background: #4a9eff;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.2s;
+      }
+      .btn:hover {
+        background: #357abd;
+      }
+      .btn.green {
+        background: #10b981;
+      }
+      .btn.green:hover {
+        background: #059669;
+      }
+      .btn.orange {
+        background: #f59e0b;
+      }
+      .btn.orange:hover {
+        background: #d97706;
+      }
+      .btn.red {
+        background: #ef4444;
+      }
+      .btn.red:hover {
+        background: #dc2626;
+      }
+      .btn.purple {
+        background: #8b5cf6;
+      }
+      .btn.purple:hover {
+        background: #7c3aed;
+      }
+      .btn.dark {
+        background: #334155;
+      }
+      .btn.dark:hover {
+        background: #475569;
+      }
+
+      .code-block,
+      pre.code-block {
+        background: #0b1120;
+        border: 1px solid #1e293b;
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 13px;
+        font-family: 'SFMono-Regular', Consolas, monospace;
+        color: #cbd5e1;
+        overflow-x: auto;
+        white-space: pre-wrap !important;
+        margin: 0 0 16px 0;
+        line-height: 1.8;
+        tab-size: 2;
+      }
+      .code-block .k {
+        color: #c678dd;
+      } /* keyword */
+      .code-block .s {
+        color: #98c379;
+      } /* string */
+      .code-block .n {
+        color: #d19a66;
+      } /* number */
+      .code-block .c {
+        color: #5c6370;
+        font-style: italic;
+      } /* comment */
+      .code-block .p {
+        color: #e5c07b;
+      } /* property */
+
+      .api-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+      .api-table th,
+      .api-table td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid #1e293b;
+      }
+      .api-table th {
+        background: #1e293b;
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .api-table td {
+        color: #cbd5e1;
+        vertical-align: top;
+      }
+      .api-table td:first-child {
+        font-family: monospace;
+        color: #4a9eff;
+        white-space: nowrap;
+      }
+      .api-table .type {
+        color: #f59e0b;
+        font-size: 12px;
+      }
+      .api-table .default {
+        color: #5c6370;
+        font-size: 12px;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        margin-left: 6px;
+      }
+      .tag.opt {
+        background: #1e293b;
+        color: #94a3b8;
+      }
+      .tag.req {
+        background: #ef4444;
+        color: #fff;
+      }
+
+      .stats-bar {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        background: #1e293b;
+        padding: 14px 18px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        margin-bottom: 24px;
+        font-size: 13px;
+      }
+      .stats-bar span {
+        color: #64748b;
+      }
+      .stats-bar strong {
+        color: #4a9eff;
+      }
+
+      .demo-box {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .demo-box h4 {
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #fff;
+      }
+      .demo-box p {
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+
+      .kbd {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #0b1120;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 13px;
+        color: #e2e8f0;
+      }
+
+      footer {
+        margin-top: 60px;
+        padding-top: 20px;
+        border-top: 1px solid #1e293b;
+        color: #64748b;
+        font-size: 13px;
+        text-align: center;
+      }
+    </style>
+    <base target="_blank" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>ImagesViewer API 文档与完整演示</h1>
+      <p class="subtitle">
+        原生 JavaScript 图片查看器，支持虚拟列表、LRU 缓存、手势拖拽与键盘快捷键。<br />
+        不依赖 Vue / React / Angular，可在任何前端项目中直接使用。
+      </p>
+
+      <div class="stats-bar">
+        <span>共生成 <strong>1000</strong> 张测试图片</span>
+        <span>缩略图虚拟列表只渲染约 <strong>15</strong> 个 DOM 节点</span>
+        <span>LRU 缓存最多 <strong>20</strong> 张大图</span>
+        <span>预加载相邻 <strong>2</strong> 张</span>
+      </div>
+
+      <div class="card-grid" id="grid"></div>
+
+      <!-- ===== 快速入口 ===== -->
+      <div class="demo-box">
+        <h4>快速入口</h4>
+        <p>点击下方按钮直接打开不同场景的查看器。</p>
+        <button class="btn" onclick="openBasic()">基础用法</button>
+        <button class="btn green" onclick="openAt(500)">从第 500 张打开</button>
+        <button class="btn orange" onclick="openAt(999)">最后一张</button>
+        <button class="btn purple" onclick="openStringArray()">字符串数组</button>
+        <button class="btn red" onclick="openNoLoop()">不循环</button>
+        <button class="btn dark" onclick="openCustomTheme()">自定义主题</button>
+        <button class="btn" onclick="openFallbackDefault()">默认错误图</button>
+        <button class="btn green" onclick="openFallbackPerImage()">单图错误图</button>
+        <button class="btn purple" onclick="openShowThumbBar()">隐藏缩略图栏</button>
+        <button class="btn red" onclick="openItemClass()">缩略图样式</button>
+        <button class="btn dark" onclick="openErrorClass()">错误样式</button>
+        <button class="btn orange" onclick="openMicroFrontend()">微前端生命周期</button>
+      </div>
+
+      <!-- ===== 示例 1：基础用法 ===== -->
+      <h2 id="example-basic">示例 1：基础用法</h2>
+      <p>传入图片对象数组，配置常用按钮和事件回调。</p>
+      <pre class="code-block">
+import ImagesViewer from '../src/index.js'
+
+const viewer = new ImagesViewer({
+  images: [
+    {
+      url: 'https://example.com/1.jpg',
+      thumbnail: 'https://example.com/1-thumb.jpg',
+      title: '示例 1'
+    },
+    {
+      url: 'https://example.com/2.jpg',
+      thumbnail: 'https://example.com/2-thumb.jpg',
+      title: '示例 2'
+    },
+  ],
+  backdrop: false,
+  loop: true,
+  buttons: {
+    zoomIn: true,
+    zoomOut: true,
+    rotateLeft: true,
+    rotateRight: true,
+    reset: true,
+    download: true,
+    fullscreen: true,
+    prev: true,
+    next: true,
+    close: true,
+    topClose: true,
+    thumbnails: true,
+    info: true,
+  },
+  onChange: (data) => console.log('切换:', data.index),
+  onImageError: (data) => console.warn('加载失败:', data.url),
+})</pre
+      >
+      <button class="btn" onclick="openBasic()">运行示例</button>
+
+      <!-- ===== 示例 2：字符串数组 ===== -->
+      <h2 id="example-strings">示例 2：字符串数组</h2>
+      <p>如果图片只有 URL，可以直接传入字符串数组。会自动使用 URL 作为缩略图，并生成默认标题。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer([
+  'https://example.com/a.jpg',
+  'https://example.com/b.jpg',
+  'https://example.com/c.jpg',
+])</pre
+      >
+      <button class="btn purple" onclick="openStringArray()">运行示例</button>
+
+      <!-- ===== 示例 3：自定义属性映射 ===== -->
+      <h2 id="example-props">示例 3：自定义属性映射</h2>
+      <p>
+        当后端返回的数据字段名与默认不符时，可通过 <code>props</code> 自定义映射。也支持函数映射。
+      </p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: [
+    {
+      src: 'https://example.com/1.jpg',
+      thumb: 'https://example.com/1t.jpg',
+      name: '风景 1'
+    },
+    {
+      src: 'https://example.com/2.jpg',
+      thumb: 'https://example.com/2t.jpg',
+      name: '风景 2'
+    },
+  ],
+  props: {
+    url: 'src',
+    thumbnail: 'thumb',
+    title: (item, index) => `${item.name} - 第 ${index + 1} 张`,
+  },
+})</pre
+      >
+      <button class="btn green" onclick="openCustomProps()">运行示例</button>
+
+      <!-- ===== 示例 4：自定义按钮 ===== -->
+      <h2 id="example-custom-buttons">示例 4：自定义按钮</h2>
+      <p>
+        通过 <code>customButtons</code> 在工具栏添加自己的按钮。每个按钮是
+        <code>[label, handler]</code> 数组。
+      </p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  customButtons: [
+    [
+      '分享',
+      function () {
+        alert('分享当前图片: ' + this.images[this.currentIndex].title)
+      }
+    ],
+    [
+      '收藏',
+      function () {
+        console.log('收藏:', this.currentIndex)
+      }
+    ],
+  ],
+})</pre
+      >
+      <button class="btn orange" onclick="openCustomButtons()">运行示例</button>
+
+      <!-- ===== 示例 5：自定义主题 ===== -->
+      <h2 id="example-theme">示例 5：自定义主题</h2>
+      <p>通过 <code>theme</code> 覆盖几乎所有颜色、尺寸和间距。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  theme: {
+    viewerBgColor: 'rgba(255, 248, 240, 0.95)',
+    textColor: '#333',
+    activeColor: '#ff6b6b',
+    toolbarBgColor: 'rgba(255, 255, 255, 0.8)',
+    buttonBgColor: 'rgba(0, 0, 0, 0.1)',
+    buttonHoverBg: 'rgba(0, 0, 0, 0.2)',
+    thumbItemWidth: 100,
+    thumbItemHeight: 70,
+    thumbGap: 12,
+    thumbBarHeight: 100,
+    transitionSpeed: '0.25s',
+  },
+})</pre
+      >
+      <button class="btn dark" onclick="openCustomTheme()">运行示例</button>
+
+      <!-- ===== 示例 6：自定义信息面板 ===== -->
+      <h2 id="example-info">示例 6：自定义信息面板与计数器</h2>
+      <p>通过 <code>onInfo</code> 和 <code>onCounter</code> 完全自定义信息面板和计数器内容。</p>
+      <pre class="code-block">const viewer = new ImagesViewer({
+  images: imageList,
+  imageInfo: {
+    visible: true,
+    showName: true,
+    showDimensions: true
+  },
+  onCounter: ({ index, total }) => `第 ${index + 1} / ${total} 张`,
+  onInfo: ({ index, total, scale, rotation }) => {
+    return `<div style="font-size:12px">
+  序号: ${index + 1} / ${total}<br>
+  缩放: ${(scale * 100).toFixed(0)}%<br>
+  旋转: ${rotation}°
+</div>`
+  },
+})</pre>
+      <button class="btn" onclick="openCustomInfo()">运行示例</button>
+
+      <!-- ===== 示例 7：不循环 + 限制缩放 ===== -->
+      <h2 id="example-noloop">示例 7：不循环 + 缩放限制</h2>
+      <p>关闭循环切换，设置最小/最大缩放倍率。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  loop: false,
+  minZoomRatio: 0.5,
+  maxZoomRatio: 3,
+})</pre
+      >
+      <button class="btn red" onclick="openNoLoop()">运行示例</button>
+
+      <!-- ===== 示例 8：错误处理 + 重试 ===== -->
+      <h2 id="example-error">示例 8：错误处理与重试</h2>
+      <p>开启 <code>retryOnError</code> 在图片加载失败时自动重试，并通过回调获取错误信息。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  retryOnError: true,
+  onImageError: ({ url, index }) => {
+    console.error(`图片加载失败 [${index}]: ${url}`)
+  },
+})</pre
+      >
+      <button class="btn orange" onclick="openErrorRetry()">运行示例</button>
+
+      <!-- ===== 示例 9：国际化 ===== -->
+      <h2 id="example-i18n">示例 9：国际化</h2>
+      <p>替换所有按钮文案和信息面板标签。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  i18n: {
+    buttons: {
+      prev: 'Previous',
+      next: 'Next',
+      close: 'Close',
+      loading: 'Loading...',
+    },
+    info: {
+      name: 'Name:',
+      dimensions: 'Size:',
+    },
+  },
+})</pre
+      >
+      <button class="btn green" onclick="openI18n()">运行示例</button>
+
+      <!-- ===== 示例 10：程序化控制 ===== -->
+      <h2 id="example-programmatic">示例 10：程序化控制</h2>
+      <p>保留实例引用，通过 API 方法在外部控制查看器。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  loop: true
+})
+
+// 2 秒后自动切换
+setTimeout(() => viewer.next(), 2000)
+
+// 5 秒后放大并旋转
+setTimeout(() => {
+  viewer.zoom(0.5)
+  viewer.rotate(90)
+  viewer.view(5)
+}, 5000)
+
+// 10 秒后关闭
+setTimeout(() => viewer.hide(), 10000)</pre
+      >
+      <button class="btn purple" onclick="openProgrammatic()">运行示例</button>
+
+      <!-- ===== 示例 11：错误图片 fallback ===== -->
+      <h2 id="example-fallback">示例 11：错误图片 fallback</h2>
+      <p>
+        支持全局默认错误图和单图独立错误图。加载失败时先尝试单图 fallback，没有则使用全局
+        defaultFallbackImage。
+      </p>
+      <pre class="code-block">
+// 方式 A：全局默认错误图
+const viewer = new ImagesViewer({
+  images: imageList,
+  defaultFallbackImage: 'https://example.com/default-error.jpg',
+})
+
+// 方式 B：单图独立错误图（覆盖全局）
+const viewer = new ImagesViewer({
+  images: [
+    { url: 'https://a.jpg', fallback: 'https://a-fallback.jpg' },
+    { url: 'https://b.jpg', fallback: 'https://b-fallback.jpg' },
+  ],
+  defaultFallbackImage: 'https://example.com/default-error.jpg',
+})</pre
+      >
+      <button class="btn" onclick="openFallbackDefault()">全局默认错误图</button>
+      <button class="btn green" onclick="openFallbackPerImage()">单图独立错误图</button>
+
+      <!-- ===== 示例 12：微前端生命周期 ===== -->
+      <h2 id="example-microfrontend">示例 12：微前端生命周期</h2>
+      <p>
+        在 qiankun / micro-app / single-spa
+        等微前端框架中，子应用卸载时必须彻底销毁查看器，避免全局事件泄漏。
+      </p>
+      <pre class="code-block">
+// 子应用挂载时初始化
+let viewer = null
+
+export function mount() {
+  viewer = new ImagesViewer({ images, loop: true })
+}
+
+// 子应用卸载时彻底销毁
+export function unmount() {
+  if (viewer) {
+    viewer.hide()  // 触发完整销毁流程
+    viewer = null
+  }
+}
+
+// 销毁时会自动清理：
+// - 所有 document / stage 事件监听
+// - 所有 setTimeout（zoomTimer、retryTimer）
+// - LRU 缓存与图片内存
+// - 虚拟列表 DOM 与对象池
+// - body.overflow 原始状态</pre
+      >
+      <button class="btn orange" onclick="openMicroFrontend()">运行示例（5 秒后自动销毁）</button>
+
+      <!-- ===== 示例 13：隐藏缩略图栏 ===== -->
+      <h2 id="example-thumbbar">示例 13：隐藏缩略图栏</h2>
+      <p>通过 <code>showThumbBar</code> 完全隐藏底部缩略图栏，适用于空间有限的场景。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  showThumbBar: false,
+})</pre
+      >
+      <button class="btn purple" onclick="openShowThumbBar()">运行示例</button>
+
+      <!-- ===== 示例 14：缩略图样式 ===== -->
+      <h2 id="example-itemclass">示例 14：缩略图样式</h2>
+      <p>
+        通过 <code>itemClass</code> 和
+        <code>activeItemClass</code> 自定义缩略图样式。支持全局设置和单图独立设置。
+      </p>
+      <pre class="code-block">
+// 方式 A：全局设置
+const viewer = new ImagesViewer({
+  images: imageList,
+  itemClass: 'my-thumb',
+  activeItemClass: 'my-thumb-active',
+})
+
+// 方式 B：单图独立设置（覆盖全局）
+const viewer = new ImagesViewer({
+  images: [
+    { url: 'a.jpg', itemClass: 'thumb-red', activeItemClass: 'thumb-red-active' },
+    { url: 'b.jpg', itemClass: 'thumb-blue' },
+  ],
+  itemClass: 'my-thumb',
+  activeItemClass: 'my-thumb-active',
+})</pre
+      >
+      <button class="btn red" onclick="openItemClass()">运行示例</button>
+
+      <!-- ===== 示例 15：错误图片样式 ===== -->
+      <h2 id="example-errorclass">示例 15：错误图片样式</h2>
+      <p>通过 <code>errorClass</code> 自定义图片加载失败时的样式。支持全局设置和单图独立设置。</p>
+      <pre class="code-block">
+// 方式 A：全局设置
+const viewer = new ImagesViewer({
+  images: imageList,
+  errorClass: 'image-error',
+})
+
+// 方式 B：单图独立设置
+const viewer = new ImagesViewer({
+  images: [
+    { url: 'a.jpg', errorClass: 'image-broken' },
+    { url: 'b.jpg', errorClass: 'image-placeholder' },
+  ],
+  errorClass: 'image-error',
+})</pre
+      >
+      <button class="btn dark" onclick="openErrorClass()">运行示例</button>
+
+      <!-- ===== 示例 16：显示/隐藏控制 ===== -->
+      <h2 id="example-visibility">示例 16：显示/隐藏控制</h2>
+      <p>
+        通过 <code>showTitle</code>、<code>showCounter</code>、<code>showNavButtons</code>
+        在构造时控制标题、计数器、导航按钮的显示。
+      </p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  showTitle: false,       // 隐藏图片标题
+  showCounter: false,     // 隐藏页码计数器
+  showNavButtons: false,  // 隐藏左右导航箭头
+})</pre
+      >
+      <button class="btn" onclick="openVisibility()">运行示例</button>
+
+      <!-- ===== 示例 17：运行时切换显示 ===== -->
+      <h2 id="example-toggle">示例 17：运行时切换显示</h2>
+      <p>
+        通过 <code>toggleTitle()</code>、<code>toggleCounter()</code>、<code
+          >toggleNavButtons()</code
+        >
+        在运行时动态切换各元素的显示状态。支持链式调用。
+      </p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({ images: imageList })
+
+// 隐藏标题
+viewer.toggleTitle()
+
+// 同时隐藏计数器和导航按钮
+viewer.toggleCounter().toggleNavButtons()
+
+// 全部恢复显示
+viewer.toggleTitle().toggleCounter().toggleNavButtons()</pre
+      >
+      <button class="btn orange" onclick="openToggle()">运行示例</button>
+
+      <!-- ===== 示例 18：跳转到指定图片 ===== -->
+      <h2 id="example-goto">示例 18：跳转到指定图片</h2>
+      <p>通过 <code>view(index)</code> 方法跳转到任意索引，支持边界检测和链式调用。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({ images: imageList })
+viewer.view(5)          // 跳转到第 6 张
+viewer.view(999)        // 越界，自动取最后一张
+viewer.view(-1)         // 负数，自动取第 0 张
+viewer.view(3).zoom(0.5) // 链式调用</pre
+      >
+      <button class="btn" onclick="openGoto()">运行示例</button>
+
+      <!-- ===== 示例 19：单张图片 ===== -->
+      <h2 id="example-single">示例 19：单张图片</h2>
+      <p>当图片只有 1 张时，<code>prev</code> / <code>next</code> 按钮自动隐藏，快捷键无响应。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: [singleImage],
+})</pre
+      >
+      <button class="btn dark" onclick="openSingleImage()">运行示例</button>
+
+      <!-- ===== 示例 20：1000 张图片 ===== -->
+      <h2 id="example-1000">示例 20：1000 张图片</h2>
+      <p>虚拟列表 + 对象池，缩略图栏只渲染视口内 DOM，承载 1000 张图片不卡顿。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: images1000,
+})</pre
+      >
+      <button class="btn" onclick="openVirtualList1000()">运行示例</button>
+
+      <!-- ===== 示例 21：5000 张图片 ===== -->
+      <h2 id="example-5000">示例 21：5000 张图片</h2>
+      <p>5000 张图片的极限测试，虚拟列表确保滚动流畅。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: images5000,
+})</pre
+      >
+      <button class="btn orange" onclick="openVirtualList5000()">运行示例</button>
+
+      <!-- ===== 示例 22：10000 张图片 ===== -->
+      <h2 id="example-10000">示例 22：10000 张图片</h2>
+      <p>10000 张图片的极端测试，验证虚拟列表和 LRU 缓存的稳定性。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: images10000,
+})</pre
+      >
+      <button class="btn dark" onclick="openVirtualList10000()">运行示例</button>
+
+      <!-- ===== 示例 23：按钮配置详解 ===== -->
+      <h2 id="example-buttons">示例 23：按钮配置详解</h2>
+      <p>通过 <code>buttons</code> 选项控制工具栏中各按钮的显隐。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  buttons: {
+    zoomIn: true, zoomOut: true, rotateLeft: true, rotateRight: true,
+    reset: true, download: true, copy: true, fullscreen: true,
+    prev: true, next: true, close: true, topClose: true,
+    thumbnails: true, info: true,
+  },
+})</pre
+      >
+      <button class="btn" onclick="openButtonsConfig()">运行示例</button>
+
+      <!-- ===== 示例 24：复制图片 ===== -->
+      <h2 id="example-copy">示例 24：复制图片</h2>
+      <p>通过工具栏复制按钮将当前图片复制到剪贴板，支持 Canvas 和 execCommand 降级。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  buttons: { copy: true },
+})</pre
+      >
+      <button class="btn orange" onclick="openCopyImage()">运行示例</button>
+
+      <!-- ===== 示例 25：完整工具栏 ===== -->
+      <h2 id="example-full">示例 25：完整工具栏</h2>
+      <p>展示所有工具栏按钮和 UI 元素同时启用时的完整效果。</p>
+      <pre class="code-block">
+const viewer = new ImagesViewer({
+  images: imageList,
+  showTitle: true,
+  showCounter: true,
+  showNavButtons: true,
+  showThumbBar: true,
+  buttons: {
+    zoomIn: true, zoomOut: true, rotateLeft: true, rotateRight: true,
+    reset: true, download: true, copy: true, fullscreen: true,
+    prev: true, next: true, close: true, topClose: true,
+    thumbnails: true, info: true,
+  },
+  imageInfo: { visible: true, showName: true, showDimensions: true },
+})</pre
+      >
+      <button class="btn dark" onclick="openFullToolbar()">运行示例</button>
+
+      <!-- ===== 完整 API 文档 ===== -->
+      <h2 id="api-options">构造选项</h2>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>类型</th>
+            <th>默认值</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>images</td>
+            <td><span class="type">string[] | object[]</span></td>
+            <td><span class="default">[]</span></td>
+            <td>图片列表。字符串数组将自动补全为对象。</td>
+          </tr>
+          <tr>
+            <td>props</td>
+            <td><span class="type">object</span></td>
+            <td><span class="default">{url,title,thumbnail}</span></td>
+            <td>属性映射。值可为字符串或函数 <code>(item, index) => value</code>。</td>
+          </tr>
+          <tr>
+            <td>backdrop</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">false</span></td>
+            <td>点击遮罩或舞台背景关闭查看器。</td>
+          </tr>
+          <tr>
+            <td>minZoomRatio</td>
+            <td><span class="type">number</span></td>
+            <td><span class="default">0.1</span></td>
+            <td>最小缩放倍率。</td>
+          </tr>
+          <tr>
+            <td>maxZoomRatio</td>
+            <td><span class="type">number</span></td>
+            <td><span class="default">5</span></td>
+            <td>最大缩放倍率。</td>
+          </tr>
+          <tr>
+            <td>loop</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">true</span></td>
+            <td>首尾循环切换。</td>
+          </tr>
+          <tr>
+            <td>retryOnError</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">false</span></td>
+            <td>加载失败时自动重试（加时间戳防缓存，最多 3 次）。</td>
+          </tr>
+          <tr>
+            <td>defaultFallbackImage</td>
+            <td><span class="type">string</span></td>
+            <td><span class="default">''</span></td>
+            <td>全局默认错误图片 URL。单图可设置 <code>fallback</code> 覆盖此值。</td>
+          </tr>
+          <tr>
+            <td>showThumbBar</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">true</span></td>
+            <td>是否显示底部缩略图栏。设为 <code>false</code> 可完全隐藏缩略图栏。</td>
+          </tr>
+          <tr>
+            <td>showTitle</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">true</span></td>
+            <td>是否显示图片标题。</td>
+          </tr>
+          <tr>
+            <td>showCounter</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">true</span></td>
+            <td>是否显示页码计数器（如 <code>1 / 10</code>）。</td>
+          </tr>
+          <tr>
+            <td>showNavButtons</td>
+            <td><span class="type">boolean</span></td>
+            <td><span class="default">true</span></td>
+            <td>是否显示左右导航箭头按钮。</td>
+          </tr>
+          <tr>
+            <td>itemClass</td>
+            <td><span class="type">string</span></td>
+            <td><span class="default">''</span></td>
+            <td>全局缩略图项 CSS class。单图可设置 <code>itemClass</code> 覆盖此值。</td>
+          </tr>
+          <tr>
+            <td>activeItemClass</td>
+            <td><span class="type">string</span></td>
+            <td><span class="default">''</span></td>
+            <td>全局选中缩略图项 CSS class。单图可设置 <code>activeItemClass</code> 覆盖此值。</td>
+          </tr>
+          <tr>
+            <td>errorClass</td>
+            <td><span class="type">string</span></td>
+            <td><span class="default">''</span></td>
+            <td>全局图片加载失败时 CSS class。单图可设置 <code>errorClass</code> 覆盖此值。</td>
+          </tr>
+          <tr>
+            <td>buttons</td>
+            <td><span class="type">object</span></td>
+            <td><span class="default">全部 true</span></td>
+            <td>控制各按钮显隐。见下方按钮配置。</td>
+          </tr>
+          <tr>
+            <td>customButtons</td>
+            <td><span class="type">[string, fn][]</span></td>
+            <td><span class="default">[]</span></td>
+            <td>
+              自定义工具栏按钮。格式 <code>[label, handler]</code>，handler 中
+              <code>this</code> 指向 viewer 实例。
+            </td>
+          </tr>
+          <tr>
+            <td>initialViewIndex</td>
+            <td><span class="type">number</span></td>
+            <td><span class="default">0</span></td>
+            <td>初始打开的图片索引。</td>
+          </tr>
+          <tr>
+            <td>zIndex</td>
+            <td><span class="type">number</span></td>
+            <td><span class="default">5000</span></td>
+            <td>查看器容器 z-index，控制层级。</td>
+          </tr>
+          <tr>
+            <td>imageInfo</td>
+            <td><span class="type">object</span></td>
+            <td><span class="default">{visible:false,...}</span></td>
+            <td>信息面板配置。见下方。</td>
+          </tr>
+          <tr>
+            <td>i18n</td>
+            <td><span class="type">object</span></td>
+            <td><span class="default">中文</span></td>
+            <td>国际化文案。见下方。</td>
+          </tr>
+          <tr>
+            <td>theme</td>
+            <td><span class="type">object</span></td>
+            <td><span class="default">暗色主题</span></td>
+            <td>完整主题配置。见下方。</td>
+          </tr>
+          <tr>
+            <td>onShow</td>
+            <td><span class="type">fn({viewer,index,image,total})</span></td>
+            <td><span class="default">null</span></td>
+            <td>查看器打开后触发。所有回调均带统一基础字段。</td>
+          </tr>
+          <tr>
+            <td>onClose</td>
+            <td><span class="type">fn({viewer,index,image,total})</span></td>
+            <td><span class="default">null</span></td>
+            <td>查看器关闭后触发。</td>
+          </tr>
+          <tr>
+            <td>onChange</td>
+            <td><span class="type">fn({...,oldIndex,direction})</span></td>
+            <td><span class="default">null</span></td>
+            <td>图片切换时触发。</td>
+          </tr>
+          <tr>
+            <td>onRotate</td>
+            <td><span class="type">fn({...,rotation})</span></td>
+            <td><span class="default">null</span></td>
+            <td>旋转时触发。</td>
+          </tr>
+          <tr>
+            <td>onDrag</td>
+            <td><span class="type">fn({...,translateX,translateY})</span></td>
+            <td><span class="default">null</span></td>
+            <td>拖拽时触发。</td>
+          </tr>
+          <tr>
+            <td>onZoom</td>
+            <td><span class="type">fn({...,scale})</span></td>
+            <td><span class="default">null</span></td>
+            <td>缩放时触发。</td>
+          </tr>
+          <tr>
+            <td>onImageError</td>
+            <td><span class="type">fn({viewer,index,image,total,url})</span></td>
+            <td><span class="default">null</span></td>
+            <td>主图加载失败时触发。</td>
+          </tr>
+          <tr>
+            <td>onInfo</td>
+            <td><span class="type">fn({viewer,index,image,total,scale,rotation})</span></td>
+            <td><span class="default">null</span></td>
+            <td>返回 HTML 字符串以自定义信息面板内容。</td>
+          </tr>
+          <tr>
+            <td>onCounter</td>
+            <td><span class="type">fn({viewer,index,image,total})</span></td>
+            <td><span class="default">null</span></td>
+            <td>返回字符串以自定义计数器内容。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>buttons 配置</h3>
+      <pre class="code-block">
+{
+  zoomIn: true,        // 放大
+  zoomOut: true,       // 缩小
+  rotateLeft: true,    // 向左旋转
+  rotateRight: true,   // 向右旋转
+  reset: true,         // 重置变换
+  download: false,     // 下载（默认隐藏，需处理跨域）
+  copy: false,         // 复制图片到剪贴板（默认关闭）
+  fullscreen: true,    // 全屏
+  prev: true,          // 上一张
+  next: true,          // 下一张
+  close: true,         // 工具栏关闭
+  topClose: true,      // 右上角关闭
+  thumbnails: true,    // 缩略图栏
+  info: true,          // 信息按钮
+}</pre
+      >
+
+      <h3>imageInfo 配置</h3>
+      <pre class="code-block">
+{
+  visible: false,      // 初始是否显示信息面板（true 打开查看器时自动显示）
+  showName: true,      // 显示图片名称
+  showDimensions: true, // 显示尺寸（naturalWidth × naturalHeight）
+}</pre
+      >
+
+      <h3>theme 配置</h3>
+      <pre class="code-block">
+{
+  viewerBgColor: 'rgba(0,0,0,0.85)',
+  toolbarBgColor: 'rgba(40,40,40,0.8)',
+  toolbarBorderRadius: '30px',
+  toolbarPadding: '8px 16px',
+  toolbarBottom: '24px',
+  buttonBgColor: 'rgba(255,255,255,0.1)',
+  buttonHoverBg: 'rgba(255,255,255,0.25)',
+  buttonSize: '40px',
+  buttonFontSize: '18px',
+  buttonBorderRadius: '50%',
+  navButtonBgColor: 'rgba(255,255,255,0.1)',
+  navButtonHoverBg: 'rgba(255,255,255,0.25)',
+  navButtonSize: '48px',
+  navButtonFontSize: '20px',
+  navButtonBorderRadius: '50%',
+  topCloseBtnSize: '44px',
+  topCloseBtnTop: '16px',
+  topCloseBtnRight: '16px',
+  topCloseBtnFontSize: '22px',
+  topCloseBtnBgColor: 'rgba(255,255,255,0.1)',
+  topCloseBtnHoverBg: 'rgba(255,255,255,0.25)',
+  infoBgColor: 'rgba(40,40,40,0.8)',
+  infoBorderRadius: '8px',
+  infoPadding: '10px 14px',
+  infoFontSize: '13px',
+  infoTop: '60px',
+  infoLeft: '16px',
+  zoomIndicatorBg: 'rgba(40,40,40,0.8)',
+  zoomIndicatorBorderRadius: '16px',
+  zoomIndicatorPadding: '6px 12px',
+  zoomIndicatorFontSize: '13px',
+  zoomIndicatorTop: '16px',
+  zoomIndicatorLeft: '16px',
+  activeColor: '#4a9eff',
+  textColor: '#fff',
+  transitionSpeed: '0.3s',
+  thumbItemWidth: 80,
+  thumbItemHeight: 56,
+  thumbGap: 10,
+  thumbBarHeight: 90,
+}</pre
+      >
+
+      <h3>i18n 配置</h3>
+      <pre class="code-block">
+{
+  buttons: {
+    prev: '上一张',
+    next: '下一张',
+    close: '关闭',
+    loading: '加载中...',
+  },
+  info: {
+    name: '名称:',
+    dimensions: '尺寸:',
+  },
+}</pre
+      >
+
+      <h2 id="api-methods">实例方法</h2>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>方法</th>
+            <th>参数</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>zoom(delta)</td>
+            <td><span class="type">number</span></td>
+            <td>相对缩放，如 <code>0.2</code> 放大 20%，<code>-0.2</code> 缩小 20%。</td>
+          </tr>
+          <tr>
+            <td>rotate(deg)</td>
+            <td><span class="type">number</span></td>
+            <td>相对旋转，如 <code>90</code> 顺时针 90°，<code>-90</code> 逆时针 90°。</td>
+          </tr>
+          <tr>
+            <td>reset()</td>
+            <td>—</td>
+            <td>重置缩放、旋转和位移。</td>
+          </tr>
+          <tr>
+            <td>prev()</td>
+            <td>—</td>
+            <td>切换到上一张。</td>
+          </tr>
+          <tr>
+            <td>next()</td>
+            <td>—</td>
+            <td>切换到下一张。</td>
+          </tr>
+          <tr>
+            <td>toggleImageInfo()</td>
+            <td>—</td>
+            <td>切换左上角信息面板显隐。</td>
+          </tr>
+          <tr>
+            <td>toggleThumbnails()</td>
+            <td>—</td>
+            <td>切换底部缩略图栏显隐。</td>
+          </tr>
+          <tr>
+            <td>toggleTitle()</td>
+            <td>—</td>
+            <td>切换图片标题显隐。支持链式调用。</td>
+          </tr>
+          <tr>
+            <td>toggleCounter()</td>
+            <td>—</td>
+            <td>切换页码计数器显隐。支持链式调用。</td>
+          </tr>
+          <tr>
+            <td>toggleNavButtons()</td>
+            <td>—</td>
+            <td>切换左右导航箭头显隐。支持链式调用。</td>
+          </tr>
+          <tr>
+            <td>toggleFullscreen()</td>
+            <td>—</td>
+            <td>切换浏览器全屏模式。</td>
+          </tr>
+          <tr>
+            <td>copyImage()</td>
+            <td>—</td>
+            <td>复制当前图片到剪贴板（需浏览器支持）。返回 Promise。</td>
+          </tr>
+          <tr>
+            <td>downloadImage()</td>
+            <td>—</td>
+            <td>触发当前图片下载（受跨域限制）。</td>
+          </tr>
+          <tr>
+            <td>hide()</td>
+            <td>—</td>
+            <td>关闭查看器并销毁 DOM（所有方法均支持链式调用）。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="api-shortcuts">键盘快捷键</h2>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>按键</th>
+            <th>功能</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="kbd">←</span> / <span class="kbd">→</span></td>
+            <td>上一张 / 下一张</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">Esc</span></td>
+            <td>关闭查看器</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">+</span> / <span class="kbd">=</span></td>
+            <td>放大</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">-</span> / <span class="kbd">_</span></td>
+            <td>缩小</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">0</span></td>
+            <td>重置缩放与旋转</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">f</span></td>
+            <td>切换全屏</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">i</span></td>
+            <td>切换信息面板</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">双击</span></td>
+            <td>重置变换</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">滚轮</span></td>
+            <td>缩放</td>
+          </tr>
+          <tr>
+            <td><span class="kbd">拖拽</span></td>
+            <td>平移图片（缩放不等于 100% 时可用，允许拖出图片本身的一半）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="api-install">安装与使用</h2>
+      <h3>ESM 导入</h3>
+      <pre class="code-block">
+import ImagesViewer from 'images-viewer-virtual'
+
+new ImagesViewer({ images: imageList })</pre
+      >
+      <h3>CDN / UMD</h3>
+      <pre class="code-block">
+&lt;script src="https://unpkg.com/images-viewer-virtual/dist/images-viewer.umd.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const viewer = new ImagesViewer({ images: imageList })
+&lt;/script&gt;</pre
+      >
+      <h3>Vue 2 / Vue 3</h3>
+      <pre class="code-block">
+// 不依赖 Vue，任何框架均可直接调用
+methods: {
+  openViewer() {
+    new ImagesViewer({
+      images: this.imageList,
+      initialViewIndex: this.currentIndex
+    })
+  }
+}</pre
+      >
+      <h3>微前端（qiankun / micro-app / single-spa）</h3>
+      <pre class="code-block">
+let viewer = null
+
+export function mount() {
+  viewer = new ImagesViewer({ images, loop: true })
+}
+
+export function unmount() {
+  if (viewer) {
+    viewer.hide()
+    viewer = null
+  }
+}</pre
+      >
+
+      <footer>
+        ImagesViewer · 纯原生 JavaScript · 虚拟列表 · LRU 缓存 ·
+        <a href="https://github.com/MaJiaXuan/images-viewer-virtual">GitHub</a>
+      </footer>
+    </div>
+
+    <script type="module">
+      import ImagesViewer from '../src/index.js'
+
+      const TOTAL = 1000
+      const UNIQUE_COUNT = 20 // 只生成 20 张不同的图片，循环使用，避免内存卡死
+
+      // 使用 Canvas 生成 PNG 数据 URI，不依赖外部网络
+      // 策略：只生成 UNIQUE_COUNT 张不同的图片，TOTAL 张图片循环复用
+      function generateImage(seed, width, height) {
+        const hue = Math.round((seed * 137.508) % 360)
+        const sat = Math.round(50 + ((seed * 7) % 30))
+        const light = Math.round(40 + ((seed * 13) % 25))
+        const hue2 = Math.round((hue + 30) % 360)
+        const sat2 = Math.round(sat - 10)
+        const light2 = Math.round(light + 10)
+        const fontSize = Math.round(width / 15)
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+
+        // 背景
+        ctx.fillStyle = 'hsl(' + hue + ',' + sat + '%,' + light + '%)'
+        ctx.fillRect(0, 0, width, height)
+
+        // 图案
+        ctx.fillStyle = 'hsl(' + hue2 + ',' + sat2 + '%,' + light2 + '%)'
+        for (let row = 0; row < 8; row++) {
+          for (let col = 0; col < 12; col++) {
+            if ((row + col + seed) % 3 === 0) {
+              ctx.fillRect(
+                Math.round((col * width) / 12),
+                Math.round((row * height) / 8),
+                Math.round(width / 12),
+                Math.round(height / 8)
+              )
+            }
+          }
+        }
+
+        // 文字
+        ctx.fillStyle = 'rgba(255,255,255,0.85)'
+        ctx.font = 'bold ' + fontSize + 'px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('图片 ' + (seed + 1), width / 2, height / 2)
+
+        return canvas.toDataURL('image/png')
+      }
+
+      // 先生成 20 张唯一图片的 data URL
+      const uniqueImages = []
+      for (let i = 0; i < UNIQUE_COUNT; i++) {
+        uniqueImages.push({
+          url: generateImage(i, 1280, 720),
+          thumbnail: generateImage(i, 200, 150),
+        })
+      }
+
+      const images = Array.from({ length: TOTAL }, (_, i) => ({
+        url: uniqueImages[i % UNIQUE_COUNT].url,
+        thumbnail: uniqueImages[i % UNIQUE_COUNT].thumbnail,
+        title: '图片 ' + (i + 1) + ' - 虚拟列表测试',
+      }))
+
+      const grid = document.getElementById('grid')
+      images.slice(0, 24).forEach((img, idx) => {
+        const card = document.createElement('div')
+        card.className = 'card'
+        card.innerHTML = `<img src="${img.thumbnail}" loading="lazy" alt=""><div class="title">${img.title}</div>`
+        card.onclick = () => openAt(idx)
+        grid.appendChild(card)
+      })
+
+      let viewer = null
+
+      function kill() {
+        if (viewer) {
+          viewer.hide()
+          viewer = null
+        }
+      }
+
+      window.openAt = (index = 0) => {
+        kill()
+        viewer = new ImagesViewer({
+          images,
+          initialViewIndex: index,
+          loop: true,
+          buttons: {
+            zoomIn: true,
+            zoomOut: true,
+            rotateLeft: true,
+            rotateRight: true,
+            reset: true,
+            download: true,
+            fullscreen: true,
+            prev: true,
+            next: true,
+            close: true,
+            topClose: true,
+            thumbnails: true,
+            info: true,
+          },
+          imageInfo: { visible: false, showName: true, showDimensions: true },
+          theme: {
+            viewerBgColor: 'rgba(5,5,10,0.92)',
+            toolbarBgColor: 'rgba(30,30,40,0.85)',
+            activeColor: '#4a9eff',
+            thumbItemWidth: 80,
+            thumbItemHeight: 56,
+            thumbGap: 10,
+            thumbBarHeight: 90,
+          },
+          onChange: data => console.log('切换:', data),
+          onImageError: data => console.warn('加载失败:', data.url),
+        })
+      }
+
+      window.openBasic = () => openAt(0)
+
+      window.openStringArray = () => {
+        kill()
+        const urls = Array.from({ length: 10 }, (_, i) => generateImage(i, 1920, 1080))
+        viewer = new ImagesViewer(urls)
+      }
+
+      window.openCustomProps = () => {
+        kill()
+        const raw = images.slice(0, 10).map((img, i) => ({
+          src: img.url,
+          thumb: img.thumbnail,
+          name: img.title,
+        }))
+        viewer = new ImagesViewer({
+          images: raw,
+          props: {
+            url: 'src',
+            thumbnail: 'thumb',
+            title: (item, index) => `${item.name} - 第 ${index + 1} 张`,
+          },
+        })
+      }
+
+      window.openCustomButtons = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 20),
+          customButtons: [
+            [
+              '分享',
+              function () {
+                alert('分享当前图片: ' + this.images[this.currentIndex].title)
+              },
+            ],
+            [
+              '收藏',
+              function () {
+                console.log('收藏:', this.currentIndex)
+              },
+            ],
+          ],
+        })
+      }
+
+      window.openCustomTheme = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 30),
+          theme: {
+            viewerBgColor: 'rgba(255, 248, 240, 0.95)',
+            textColor: '#333',
+            activeColor: '#ff6b6b',
+            toolbarBgColor: 'rgba(255, 255, 255, 0.8)',
+            buttonBgColor: 'rgba(0, 0, 0, 0.1)',
+            buttonHoverBg: 'rgba(0, 0, 0, 0.2)',
+            thumbItemWidth: 100,
+            thumbItemHeight: 70,
+            thumbGap: 12,
+            thumbBarHeight: 100,
+            transitionSpeed: '0.25s',
+          },
+        })
+      }
+
+      window.openCustomInfo = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 30),
+          imageInfo: { visible: true, showName: true, showDimensions: true },
+          onCounter: ({ index, total }) => `第 ${index + 1} / ${total} 张`,
+          onInfo: ({ index, total, scale, rotation }) => {
+            return `<div style="font-size:12px">
+        序号: ${index + 1} / ${total}<br>
+        缩放: ${(scale * 100).toFixed(0)}%<br>
+        旋转: ${rotation}°
+      </div>`
+          },
+        })
+      }
+
+      window.openNoLoop = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 10),
+          loop: false,
+          minZoomRatio: 0.5,
+          maxZoomRatio: 3,
+        })
+      }
+
+      window.openErrorRetry = () => {
+        kill()
+        const badImages = [
+          {
+            url: 'https://invalid-domain-12345.com/1.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/1t.jpg',
+            title: '错误图片 1',
+          },
+          {
+            url: generateImage(999, 1920, 1080),
+            thumbnail: generateImage(999, 200, 150),
+            title: '正常图片',
+          },
+          {
+            url: 'https://invalid-domain-12345.com/2.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/2t.jpg',
+            title: '错误图片 2',
+          },
+        ]
+        viewer = new ImagesViewer({
+          images: badImages,
+          retryOnError: true,
+          onImageError: ({ url, index }) => console.error(`图片加载失败 [${index}]: ${url}`),
+        })
+      }
+
+      window.openI18n = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 10),
+          i18n: {
+            buttons: {
+              prev: 'Previous',
+              next: 'Next',
+              close: 'Close',
+              loading: 'Loading...',
+            },
+            info: {
+              name: 'Name:',
+              dimensions: 'Size:',
+            },
+          },
+        })
+      }
+
+      window.openProgrammatic = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 20),
+          loop: true,
+          onShow: () => {
+            console.log('查看器已打开，2 秒后自动切换...')
+            setTimeout(() => {
+              if (viewer) viewer.next()
+            }, 2000)
+            setTimeout(() => {
+              if (viewer) {
+                viewer.zoom(0.5)
+                viewer.rotate(90)
+                viewer.view(5)
+              }
+            }, 5000)
+            setTimeout(() => {
+              if (viewer) viewer.hide()
+            }, 10000)
+          },
+        })
+      }
+
+      window.openFallbackDefault = () => {
+        kill()
+        const mixedImages = [
+          {
+            url: 'https://invalid-domain-12345.com/1.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/1t.jpg',
+            title: '错误图片 1（将显示默认错误图）',
+          },
+          {
+            url: generateImage(997, 1920, 1080),
+            thumbnail: generateImage(997, 200, 150),
+            title: '正常图片 1',
+          },
+          {
+            url: 'https://invalid-domain-12345.com/2.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/2t.jpg',
+            title: '错误图片 2（将显示默认错误图）',
+          },
+        ]
+        viewer = new ImagesViewer({
+          images: mixedImages,
+          defaultFallbackImage: generateImage(998, 1920, 1080),
+          onImageError: ({ url, index }) =>
+            console.warn('加载失败:', url, '已使用 defaultFallbackImage'),
+        })
+      }
+
+      window.openFallbackPerImage = () => {
+        kill()
+        const mixedImages = [
+          {
+            url: 'https://invalid-domain-12345.com/1.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/1t.jpg',
+            title: '错误图片 1（使用单图 fallback）',
+            fallback: generateImage(995, 1920, 1080),
+          },
+          {
+            url: generateImage(994, 1920, 1080),
+            thumbnail: generateImage(994, 200, 150),
+            title: '正常图片',
+          },
+          {
+            url: 'https://invalid-domain-12345.com/2.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/2t.jpg',
+            title: '错误图片 2（使用单图 fallback）',
+            fallback: generateImage(993, 1920, 1080),
+          },
+        ]
+        viewer = new ImagesViewer({
+          images: mixedImages,
+          defaultFallbackImage: generateImage(992, 1920, 1080),
+          onImageError: ({ url, index }) =>
+            console.warn('加载失败:', url, '已使用单图 fallback 或 defaultFallbackImage'),
+        })
+      }
+
+      window.openMicroFrontend = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 10),
+          loop: true,
+          onShow: () => {
+            console.log('查看器已打开，5 秒后模拟微前端卸载...')
+            setTimeout(() => {
+              if (viewer) {
+                console.log('模拟微前端 unmount：调用 viewer.hide() 彻底销毁')
+                viewer.hide()
+                viewer = null
+              }
+            }, 5000)
+          },
+          onClose: () => {
+            console.log('查看器已完全销毁，事件 / DOM / Timer 全部清理')
+          },
+        })
+      }
+
+      window.openShowThumbBar = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 20),
+          showThumbBar: false,
+          loop: true,
+        })
+      }
+
+      window.openItemClass = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 20).map((img, i) => ({
+            ...img,
+            itemClass: i === 5 ? 'item-custom' : '',
+            activeItemClass: i === 5 ? 'active-item-custom' : '',
+          })),
+          itemClass: 'item-default',
+          activeItemClass: 'active-item-default',
+          activeThumbColor: '#ff6b6b',
+          loop: true,
+        })
+      }
+
+      window.openErrorClass = () => {
+        kill()
+        const mixedImages = [
+          {
+            url: generateImage(990, 1920, 1080),
+            thumbnail: generateImage(990, 200, 150),
+            title: '正常图片 1',
+          },
+          {
+            url: 'https://invalid-domain-12345.com/1.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/1t.jpg',
+            title: '错误图片（全局 errorClass）',
+          },
+          {
+            url: 'https://invalid-domain-12345.com/2.jpg',
+            thumbnail: 'https://invalid-domain-12345.com/2t.jpg',
+            title: '错误图片（单图 errorClass）',
+            errorClass: 'error-custom',
+          },
+          {
+            url: generateImage(991, 1920, 1080),
+            thumbnail: generateImage(991, 200, 150),
+            title: '正常图片 2',
+          },
+        ]
+        viewer = new ImagesViewer({
+          images: mixedImages,
+          errorClass: 'error-default',
+          defaultFallbackImage: generateImage(992, 1920, 1080),
+          onImageError: ({ url, index }) => console.warn('加载失败:', url, '已使用 fallback'),
+        })
+      }
+
+      window.openVisibility = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 5),
+          showTitle: false,
+          showCounter: false,
+          showNavButtons: false,
+        })
+      }
+
+      window.openToggle = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 5),
+        })
+        setTimeout(() => viewer.toggleTitle(), 1000)
+        setTimeout(() => viewer.toggleCounter(), 2000)
+        setTimeout(() => viewer.toggleNavButtons(), 3000)
+        setTimeout(() => viewer.toggleTitle().toggleCounter().toggleNavButtons(), 4000)
+      }
+
+      window.openGoto = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 10),
+          buttons: { prev: true, next: true, close: true, thumbnails: true },
+        })
+        setTimeout(() => viewer.view(5), 1000)
+      }
+
+      window.openSingleImage = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: [images[0]],
+        })
+      }
+
+      window.openVirtualList1000 = () => {
+        kill()
+        viewer = new ImagesViewer({ images: images })
+      }
+
+      window.openVirtualList5000 = () => {
+        kill()
+        const images5000 = Array.from({ length: 5000 }, (_, i) => ({
+          url: generateImage(i + 2000, 1920, 1080),
+          thumbnail: generateImage(i + 2000, 200, 150),
+          title: '图片 ' + (i + 1),
+        }))
+        viewer = new ImagesViewer({ images: images5000 })
+      }
+
+      window.openVirtualList10000 = () => {
+        kill()
+        const images10000 = Array.from({ length: 10000 }, (_, i) => ({
+          url: generateImage(i + 7000, 1920, 1080),
+          thumbnail: generateImage(i + 7000, 200, 150),
+          title: '图片 ' + (i + 1),
+        }))
+        viewer = new ImagesViewer({ images: images10000 })
+      }
+
+      window.openButtonsConfig = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 5),
+          buttons: {
+            zoomIn: true,
+            zoomOut: true,
+            rotateLeft: true,
+            rotateRight: true,
+            reset: true,
+            download: true,
+            copy: true,
+            fullscreen: true,
+            prev: true,
+            next: true,
+            close: true,
+            topClose: true,
+            thumbnails: true,
+            info: true,
+          },
+        })
+      }
+
+      window.openCopyImage = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 5),
+          buttons: {
+            copy: true,
+            download: true,
+            close: true,
+            zoomIn: true,
+            zoomOut: true,
+            reset: true,
+          },
+        })
+      }
+
+      window.openFullToolbar = () => {
+        kill()
+        viewer = new ImagesViewer({
+          images: images.slice(0, 5),
+          showTitle: true,
+          showCounter: true,
+          showNavButtons: true,
+          showThumbBar: true,
+          buttons: {
+            zoomIn: true,
+            zoomOut: true,
+            rotateLeft: true,
+            rotateRight: true,
+            reset: true,
+            download: true,
+            copy: true,
+            fullscreen: true,
+            prev: true,
+            next: true,
+            close: true,
+            topClose: true,
+            thumbnails: true,
+            info: true,
+          },
+          imageInfo: { visible: true, showName: true, showDimensions: true },
+        })
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+# Build artifacts not needed in npm package
+*.map
+stats.html
+*.gz

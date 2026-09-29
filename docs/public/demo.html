@@ -1,0 +1,245 @@
+  <p class="desc">点击下方卡片即可运行对应示例，所有图片使用 Canvas 生成 PNG，不依赖外部网络</p>
+  <div class="grid" id="grid"></div>
+  <footer>
+    ImagesViewer · 纯原生 JavaScript · <a href="/images-viewer-virtual/">返回文档首页</a>
+  </footer>
+
+  <script src="./dist/images-viewer.umd.js"></script>
+  <script>
+    const TOTAL = 100
+    const UNIQUE_COUNT = 20
+
+    function generateImage(seed, width, height) {
+      const hue = Math.round((seed * 137.508) % 360)
+      const sat = Math.round(50 + (seed * 7) % 30)
+      const light = Math.round(40 + (seed * 13) % 25)
+      const hue2 = Math.round((hue + 30) % 360)
+      const sat2 = Math.round(sat - 10)
+      const light2 = Math.round(light + 10)
+      const fontSize = Math.round(width / 15)
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+
+      ctx.fillStyle = 'hsl(' + hue + ',' + sat + '%,' + light + '%)'
+      ctx.fillRect(0, 0, width, height)
+
+      ctx.fillStyle = 'hsl(' + hue2 + ',' + sat2 + '%,' + light2 + '%)'
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 12; col++) {
+          if ((row + col + seed) % 3 === 0) {
+            ctx.fillRect(
+              Math.round(col * width / 12),
+              Math.round(row * height / 8),
+              Math.round(width / 12),
+              Math.round(height / 8)
+            )
+          }
+        }
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.85)'
+      ctx.font = 'bold ' + fontSize + 'px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText('图片 ' + (seed + 1), width / 2, height / 2)
+
+      return canvas.toDataURL('image/png')
+    }
+
+    const uniqueImages = []
+    for (let i = 0; i < UNIQUE_COUNT; i++) {
+      uniqueImages.push({
+        url: generateImage(i, 1280, 720),
+        thumbnail: generateImage(i, 200, 150),
+      })
+    }
+
+    const images = Array.from({ length: TOTAL }, (_, i) => ({
+      url: uniqueImages[i % UNIQUE_COUNT].url,
+      thumbnail: uniqueImages[i % UNIQUE_COUNT].thumbnail,
+      title: '图片 ' + (i + 1),
+    }))
+    let viewer = null
+    function kill() { if (viewer) { viewer.hide(); viewer = null } }
+
+    const demos = [
+      {
+        title: '基础用法',
+        desc: '传入图片对象数组，配置常用按钮和事件回调。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({
+            images: images.slice(0, 20),
+            loop: true,
+            buttons: { zoomIn: true, zoomOut: true, rotateLeft: true, rotateRight: true, reset: true, download: true, copy: true, fullscreen: true, prev: true, next: true, close: true, topClose: true, thumbnails: true, info: true },
+            onChange: d => console.log('切换:', d),
+          })
+        },
+      },
+      {
+        title: '字符串数组',
+        desc: '只传入 URL 字符串数组，自动补全。',
+        run() {
+          kill()
+          viewer = new ImagesViewer(images.slice(0, 10).map(i => i.url))
+        },
+      },
+      {
+        title: '自定义属性映射',
+        desc: '使用 props 将数据字段映射到内部字段。',
+        run() {
+          kill()
+          const raw = images.slice(0, 10).map((img, i) => ({ src: img.url, thumb: img.thumbnail, name: img.title }))
+          viewer = new ImagesViewer({ images: raw, props: { url: 'src', thumbnail: 'thumb', title: (item, index) => `${item.name} - 第 ${index + 1} 张` } })
+        },
+      },
+      {
+        title: '自定义按钮',
+        desc: '添加自定义工具栏按钮。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({
+            images: images.slice(0, 20),
+            customButtons: [
+              ['分享', function () { alert('分享: ' + this.images[this.currentIndex].title) }],
+              ['收藏', function () { console.log('收藏:', this.currentIndex) }],
+            ],
+          })
+        },
+      },
+      {
+        title: '自定义主题',
+        desc: '覆盖颜色、尺寸和间距。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({
+            images: images.slice(0, 20),
+            theme: { viewerBgColor: 'rgba(255,248,240,0.95)', textColor: '#333', activeColor: '#ff6b6b', toolbarBgColor: 'rgba(255,255,255,0.8)', buttonBgColor: 'rgba(0,0,0,0.1)', buttonHoverBg: 'rgba(0,0,0,0.2)', thumbItemWidth: 100, thumbItemHeight: 70, thumbGap: 12, thumbBarHeight: 100, transitionSpeed: '0.25s' },
+          })
+        },
+      },
+      {
+        title: '自定义信息面板',
+        desc: '使用 onInfo 和 onCounter 自定义显示。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({
+            images: images.slice(0, 20),
+            onInfo: ({ index, total, scale }) => '<div style="padding:8px 12px;background:rgba(0,0,0,0.6);border-radius:6px;color:#fff">自定义: ' + (index + 1) + ' / ' + total + ' | 缩放: ' + (scale * 100).toFixed(0) + '%</div>',
+            onCounter: ({ index, total }) => '第 ' + (index + 1) + ' 页 / 共 ' + total + ' 页',
+          })
+        },
+      },
+      {
+        title: '不循环 + 缩放限制',
+        desc: '关闭循环，限制缩放范围。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({ images: images.slice(0, 10), loop: false, minZoomRatio: 0.5, maxZoomRatio: 3 })
+        },
+      },
+      {
+        title: '错误处理与重试',
+        desc: '启用自动重试和错误回调。',
+        run() {
+          kill()
+          const broken = images.slice(0, 3).map((img, i) => ({ ...img, url: i === 1 ? 'https://invalid/1.jpg' : img.url }))
+          viewer = new ImagesViewer({ images: broken, retryOnError: true, onImageError: d => console.warn('失败:', d.url) })
+        },
+      },
+      {
+        title: '国际化',
+        desc: '切换为英文界面。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({
+            images: images.slice(0, 20),
+            i18n: { buttons: { prev: 'Previous', next: 'Next', close: 'Close', loading: 'Loading...' }, info: { name: 'Name:', dimensions: 'Size:', page: 'Page', scale: 'Scale', rotation: 'Rotation', helpTitle: 'Instructions', keyboardShortcuts: 'Keyboard Shortcuts', gesture: 'Gestures', prevShortcut: '← Previous', nextShortcut: '→ Next', closeShortcut: 'Esc Close', zoomInShortcut: '+ / = Zoom In', zoomOutShortcut: '- / _ Zoom Out', resetShortcut: '0 Reset', fullscreenShortcut: 'f Fullscreen', infoShortcut: 'i Info', doubleClick: 'Double Click Reset', wheelZoom: 'Wheel Zoom', dragPan: 'Drag Pan (zoom > 1)' } },
+          })
+        },
+      },
+      {
+        title: '程序化控制',
+        desc: '通过 API 方法控制查看器。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({ images: images.slice(0, 10), onShow: () => { setTimeout(() => viewer.zoom(0.3), 500); setTimeout(() => viewer.rotate(90), 1000); setTimeout(() => viewer.reset(), 2000); } })
+        },
+      },
+      {
+        title: '错误图片 Fallback',
+        desc: '全局和单图设置 fallback。',
+        run() {
+          kill()
+          const mixed = images.slice(0, 5).map((img, i) => ({ ...img, url: i === 2 ? 'https://invalid/2.jpg' : img.url, fallback: i === 2 ? generateImage(999, 1280, 720) : '' }))
+          viewer = new ImagesViewer({ images: mixed, defaultFallbackImage: generateImage(998, 1280, 720), onImageError: d => console.warn('失败:', d.url) })
+        },
+      },
+      {
+        title: '微前端生命周期',
+        desc: '演示完整的挂载与卸载。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({
+            images: images.slice(0, 10),
+            loop: true,
+            onShow: () => { setTimeout(() => { if (viewer) { console.log('模拟 unmount: viewer.hide()'); viewer.hide(); viewer = null } }, 5000) },
+            onClose: () => console.log('已完全销毁'),
+          })
+        },
+      },
+      {
+        title: '单张图片',
+        desc: '只有 1 张图片时自动隐藏导航按钮。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({ images: images.slice(0, 1) })
+        },
+      },
+      {
+        title: '隐藏缩略图栏',
+        desc: 'showThumbBar: false 完全隐藏底部栏。',
+        run() {
+          kill()
+          viewer = new ImagesViewer({ images: images.slice(0, 20), showThumbBar: false })
+        },
+      },
+      {
+        title: '缩略图样式',
+        desc: 'itemClass 和 activeItemClass 自定义样式。',
+        run() {
+          kill()
+          const styled = images.slice(0, 20).map((img, i) => ({ ...img, itemClass: i === 5 ? 'item-custom' : '', activeItemClass: i === 5 ? 'active-item-custom' : '' }))
+          viewer = new ImagesViewer({ images: styled, itemClass: 'item-default', activeItemClass: 'active-item-default', activeThumbColor: '#ff6b6b', loop: true })
+        },
+      },
+      {
+        title: '错误样式',
+        desc: 'errorClass 自定义图片加载失败的样式。',
+        run() {
+          kill()
+          const mixed = [
+            { ...images[0], title: '正常图片' },
+            { url: 'https://invalid/1.jpg', thumbnail: 'https://invalid/1t.jpg', title: '错误图片（全局 errorClass）' },
+            { url: 'https://invalid/2.jpg', thumbnail: 'https://invalid/2t.jpg', title: '错误图片（单图 errorClass）', errorClass: 'error-custom' },
+            { ...images[1], title: '正常图片 2' },
+          ]
+          viewer = new ImagesViewer({ images: mixed, errorClass: 'error-default', defaultFallbackImage: generateImage(992, 1280, 720), onImageError: d => console.warn('失败:', d.url) })
+        },
+      },
+    ]
+
+    const grid = document.getElementById('grid')
+    demos.forEach((d, i) => {
+      const card = document.createElement('div')
+      card.className = 'card'
+      card.innerHTML = '<h3>' + (i + 1) + '. ' + d.title + '</h3><p>' + d.desc + '</p><span class="tag">点击运行</span>'
+      card.onclick = d.run
+      grid.appendChild(card)
+    })
+  </script>
+</body>
+</html>

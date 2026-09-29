@@ -1,0 +1,60 @@
+# 依赖
+node_modules
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+.pnpm-debug.log*
+
+# 构建输出
+dist
+dist-ssr
+*.local
+
+# 压缩包
+*.tgz
+*.tar.gz
+*.tar
+
+# 锁文件（项目使用 pnpm）
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 备份文件
+*.bak
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# 缓存
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# VitePress 构建产物和缓存
+docs/.vitepress/dist
+docs/.vitepress/cache
+
+# 临时文档
+FOLDER_STRUCTURE.md

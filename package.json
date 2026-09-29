@@ -1,0 +1,87 @@
+{
+  "name": "images-viewer-virtual",
+  "version": "1.0.0",
+  "description": "原生图片查看器，支持虚拟列表，可承载上千张图片",
+  "main": "dist/images-viewer.umd.js",
+  "module": "dist/images-viewer.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "dev": "vite",
+    "build": "vite build",
+    "build:lib": "node scripts/build-lib.js",
+    "preview": "vite preview",
+    "docs:prebuild": "node scripts/build-lib.js && node scripts/copy-dist.js",
+    "docs:dev": "pnpm docs:prebuild && vitepress dev docs",
+    "docs:build": "pnpm docs:prebuild && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepare": "husky",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format": "prettier --write .",
+    "stylelint": "stylelint \"**/*.{css,scss}\" --fix",
+    "check-assets": "node scripts/check-assets.js",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:patch": "standard-version --release-as patch"
+  },
+  "keywords": [
+    "image-viewer",
+    "virtual-list",
+    "lightbox",
+    "gallery",
+    "photos"
+  ],
+  "author": "MJX <940062996@qq.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MaJiaXuan/images-viewer-virtual.git"
+  },
+  "homepage": "https://github.com/MaJiaXuan/images-viewer-virtual#readme",
+  "bugs": {
+    "url": "https://github.com/MaJiaXuan/images-viewer-virtual/issues"
+  },
+  "dependencies": {
+    "copy-image-clipboard": "2.1.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "@vitejs/plugin-legacy": "7.2.1",
+    "eslint": "9.25.0",
+    "eslint-plugin-import": "2.31.0",
+    "husky": "9.1.7",
+    "lint-staged": "15.5.0",
+    "only-allow": "1.2.1",
+    "prettier": "3.6.0",
+    "rollup-plugin-visualizer": "5.14.0",
+    "standard-version": "9.5.0",
+    "stylelint": "16.22.0",
+    "stylelint-config-standard": "37.0.0",
+    "terser": "5.39.0",
+    "vite": "7.3.2",
+    "vitepress": "1.6.4",
+    "vue": "3.5.38"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0 <11.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "0.27.4"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
