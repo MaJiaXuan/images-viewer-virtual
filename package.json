@@ -1,6 +1,6 @@
 {
   "name": "images-viewer-virtual",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "原生图片查看器，支持虚拟列表，可承载上千张图片",
   "main": "dist/images-viewer.umd.js",
   "module": "dist/images-viewer.es.js",
