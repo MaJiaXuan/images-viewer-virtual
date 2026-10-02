@@ -1,5 +1,13 @@
 # Changelog
 
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [1.0.2](https://github.com/MaJiaXuan/images-viewer-virtual/compare/v1.0.1...v1.0.2) (2026-10-02)
+
+### 🐛 修复
+
+- 修正 files 白名单覆盖 .npmignore 导致 .gz 文件被发布 ([f2c7e1a](https://github.com/MaJiaXuan/images-viewer-virtual/commit/f2c7e1a7641a96810d1b7c3b30c5c71cab71f5c4))
+
 ## 1.0.1 (2026-09-29)
 
 ### 破坏性变更
