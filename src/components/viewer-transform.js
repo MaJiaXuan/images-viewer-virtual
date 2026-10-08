@@ -5,25 +5,37 @@
 import { clamp } from '../utils/dom.js'
 
 const ELASTIC_DISTANCE = 60 // 弹性距离，允许超出边界 60px
+const PERCENT = 100 // 缩放倍率 → 百分比
+const ZOOM_INDICATOR_HIDE_MS = 1500 // 缩放指示器自动隐藏延时
+const HALF = 2 // 取半：尺寸差 / 视口的一半，即单侧的可移动行程
+
+/**
+ * 组合最终 transform：EXIF 方向变换（如有）在最外层，用户变换在内层。
+ * _orientationTransform 由 index.js 的 _applyOrientation() 设置，默认为空。
+ */
+export function composeTransform(viewer) {
+  const s = clamp(viewer.scale, viewer.options.minZoomRatio, viewer.options.maxZoomRatio)
+  const base = `translate(${viewer.translateX}px, ${viewer.translateY}px) scale(${s}) rotate(${viewer.rotation}deg)`
+  const orientation = viewer._orientationTransform
+  return orientation ? `${orientation} ${base}` : base
+}
 
 export function applyTransform(viewer) {
-  const { scale, rotation, translateX, translateY, mainImg, options } = viewer
-  const s = clamp(scale, options.minZoomRatio, options.maxZoomRatio)
-
-  mainImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${s}) rotate(${rotation}deg)`
+  const s = clamp(viewer.scale, viewer.options.minZoomRatio, viewer.options.maxZoomRatio)
+  viewer.mainImg.style.transform = composeTransform(viewer)
 
   // 缩放指示器
   if (viewer.zoomIndEl) {
-    viewer.zoomIndEl.textContent = `缩放: ${Math.round(s * 100)}%`
+    viewer.zoomIndEl.textContent = `缩放: ${Math.round(s * PERCENT)}%`
     viewer.zoomIndEl.style.opacity = s !== 1 ? '1' : '0'
     clearTimeout(viewer._zoomTimer)
     viewer._zoomTimer = setTimeout(() => {
       viewer.zoomIndEl.style.opacity = '0'
-    }, 1500)
+    }, ZOOM_INDICATOR_HIDE_MS)
   }
 
   viewer._emit('onZoom', { scale: s })
-  viewer._emit('onDrag', { translateX, translateY })
+  viewer._emit('onDrag', { translateX: viewer.translateX, translateY: viewer.translateY })
 }
 
 /**
@@ -52,8 +64,8 @@ function getDragBounds(viewer) {
   const scaledW = imgW * scale
   const scaledH = imgH * scale
 
-  const maxX = Math.abs(scaledW - stageW) / 2
-  const maxY = Math.abs(scaledH - stageH) / 2
+  const maxX = Math.abs(scaledW - stageW) / HALF
+  const maxY = Math.abs(scaledH - stageH) / HALF
 
   return { minX: -maxX, maxX, minY: -maxY, maxY }
 }
@@ -144,8 +156,8 @@ export function zoomAt(viewer, delta, centerX, centerY) {
   if (newScale === oldScale) return
 
   const { stage } = viewer
-  const stageCX = stage.clientWidth / 2
-  const stageCY = stage.clientHeight / 2
+  const stageCX = stage.clientWidth / HALF
+  const stageCY = stage.clientHeight / HALF
   const dx = centerX - stageCX - viewer.translateX
   const dy = centerY - stageCY - viewer.translateY
 

@@ -273,7 +273,7 @@
           kill()
           viewer = new ImagesViewer({
             images: images.slice(0, 20),
-            i18n: { buttons: { prev: 'Previous', next: 'Next', close: 'Close', loading: 'Loading...' }, info: { name: 'Name:', dimensions: 'Size:', page: 'Page', scale: 'Scale', rotation: 'Rotation', helpTitle: 'Instructions', keyboardShortcuts: 'Keyboard Shortcuts', gesture: 'Gestures', prevShortcut: '← Previous', nextShortcut: '→ Next', closeShortcut: 'Esc Close', zoomInShortcut: '+ / = Zoom In', zoomOutShortcut: '- / _ Zoom Out', resetShortcut: '0 Reset', fullscreenShortcut: 'f Fullscreen', infoShortcut: 'i Info', doubleClick: 'Double Click Reset', wheelZoom: 'Wheel Zoom', dragPan: 'Drag Pan (zoom > 1)' } },
+            i18n: { buttons: { zoomIn: 'Zoom In', zoomOut: 'Zoom Out', rotateLeft: 'Rotate Left', rotateRight: 'Rotate Right', reset: 'Reset', download: 'Download', copy: 'Copy', fullscreen: 'Fullscreen', info: 'Info', thumbnails: 'Thumbnails', close: 'Close', loading: 'Loading...' }, info: { name: 'Name:', dimensions: 'Size:' }, helpTitle: 'Instructions', helpKeys: 'Shortcuts', helpGestures: 'Gestures' },
           })
         },
       },
@@ -329,7 +329,7 @@
         run() {
           kill()
           const styled = images.slice(0, 20).map((img, i) => ({ ...img, itemClass: i === 5 ? 'item-custom' : '', activeItemClass: i === 5 ? 'active-item-custom' : '' }))
-          viewer = new ImagesViewer({ images: styled, itemClass: 'item-default', activeItemClass: 'active-item-default', activeThumbColor: '#ff6b6b', loop: true })
+          viewer = new ImagesViewer({ images: styled, itemClass: 'item-default', activeItemClass: 'active-item-default', theme: { activeColor: '#ff6b6b' }, loop: true })
         },
       },
       {

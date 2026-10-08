@@ -500,14 +500,22 @@ const viewer = new ImagesViewer({
 
       <!-- ===== 示例 9：国际化 ===== -->
       <h2 id="example-i18n">示例 9：国际化</h2>
-      <p>替换所有按钮文案和信息面板标签。</p>
+      <p>替换工具栏按钮提示与信息面板标签。</p>
       <pre class="code-block">
 const viewer = new ImagesViewer({
   images: imageList,
   i18n: {
     buttons: {
-      prev: 'Previous',
-      next: 'Next',
+      zoomIn: 'Zoom In',
+      zoomOut: 'Zoom Out',
+      rotateLeft: 'Rotate Left',
+      rotateRight: 'Rotate Right',
+      reset: 'Reset',
+      download: 'Download',
+      copy: 'Copy',
+      fullscreen: 'Fullscreen',
+      info: 'Info',
+      thumbnails: 'Thumbnails',
       close: 'Close',
       loading: 'Loading...',
     },
@@ -515,6 +523,9 @@ const viewer = new ImagesViewer({
       name: 'Name:',
       dimensions: 'Size:',
     },
+    helpTitle: 'Instructions',
+    helpKeys: 'Shortcuts',
+    helpGestures: 'Gestures',
   },
 })</pre
       >
@@ -901,7 +912,7 @@ const viewer = new ImagesViewer({
           <tr>
             <td>buttons</td>
             <td><span class="type">object</span></td>
-            <td><span class="default">全部 true</span></td>
+            <td><span class="default">除 copy 外均为 true</span></td>
             <td>控制各按钮显隐。见下方按钮配置。</td>
           </tr>
           <tr>
@@ -928,7 +939,9 @@ const viewer = new ImagesViewer({
           <tr>
             <td>imageInfo</td>
             <td><span class="type">object</span></td>
-            <td><span class="default">{visible:false,...}</span></td>
+            <td>
+              <span class="default">{visible:false, showName:true, showDimensions:true}</span>
+            </td>
             <td>信息面板配置。见下方。</td>
           </tr>
           <tr>
@@ -1008,7 +1021,7 @@ const viewer = new ImagesViewer({
   rotateLeft: true,    // 向左旋转
   rotateRight: true,   // 向右旋转
   reset: true,         // 重置变换
-  download: false,     // 下载（默认隐藏，需处理跨域）
+  download: true,      // 下载
   copy: false,         // 复制图片到剪贴板（默认关闭）
   fullscreen: true,    // 全屏
   prev: true,          // 上一张
@@ -1079,8 +1092,16 @@ const viewer = new ImagesViewer({
       <pre class="code-block">
 {
   buttons: {
-    prev: '上一张',
-    next: '下一张',
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    rotateLeft: '向左旋转',
+    rotateRight: '向右旋转',
+    reset: '重置',
+    download: '下载',
+    copy: '复制',
+    fullscreen: '全屏',
+    info: '信息',
+    thumbnails: '缩略图',
     close: '关闭',
     loading: '加载中...',
   },
@@ -1088,6 +1109,9 @@ const viewer = new ImagesViewer({
     name: '名称:',
     dimensions: '尺寸:',
   },
+  helpTitle: '操作指引',
+  helpKeys: '快捷键',
+  helpGestures: '手势',
 }</pre
       >
 
@@ -1115,6 +1139,36 @@ const viewer = new ImagesViewer({
             <td>reset()</td>
             <td>—</td>
             <td>重置缩放、旋转和位移。</td>
+          </tr>
+          <tr>
+            <td>zoomTo(ratio)</td>
+            <td><span class="type">number</span></td>
+            <td>缩放到绝对倍率，受 <code>minZoomRatio</code> / <code>maxZoomRatio</code> 约束。</td>
+          </tr>
+          <tr>
+            <td>rotateTo(degree)</td>
+            <td><span class="type">number</span></td>
+            <td>旋转到绝对角度（deg）。</td>
+          </tr>
+          <tr>
+            <td>move(x, y)</td>
+            <td><span class="type">number, number</span></td>
+            <td>相对位移，<code>y</code> 省略时取 <code>x</code>。</td>
+          </tr>
+          <tr>
+            <td>moveTo(x, y)</td>
+            <td><span class="type">number, number</span></td>
+            <td>移动到绝对位移，<code>y</code> 省略时取 <code>x</code>。</td>
+          </tr>
+          <tr>
+            <td>toggle()</td>
+            <td>—</td>
+            <td>在 <code>1</code>（原始比例）与「适应窗口」倍率之间切换缩放。</td>
+          </tr>
+          <tr>
+            <td>view(index, animated)</td>
+            <td><span class="type">number, boolean</span></td>
+            <td>跳转到指定索引，<code>animated</code> 默认 <code>true</code>。</td>
           </tr>
           <tr>
             <td>prev()</td>
@@ -1155,6 +1209,26 @@ const viewer = new ImagesViewer({
             <td>toggleFullscreen()</td>
             <td>—</td>
             <td>切换浏览器全屏模式。</td>
+          </tr>
+          <tr>
+            <td>tooltip()</td>
+            <td>—</td>
+            <td>显示当前缩放百分比指示器（1.5 秒后自动隐藏）。</td>
+          </tr>
+          <tr>
+            <td>play()</td>
+            <td>—</td>
+            <td>开始幻灯片自动播放，间隔由 <code>interval</code> 选项控制（默认 5000ms）。</td>
+          </tr>
+          <tr>
+            <td>stop()</td>
+            <td>—</td>
+            <td>停止幻灯片自动播放。</td>
+          </tr>
+          <tr>
+            <td>update()</td>
+            <td>—</td>
+            <td>重新读取 <code>options.images</code> 并刷新视图，用于动态增删 / 替换图片。</td>
           </tr>
           <tr>
             <td>copyImage()</td>
@@ -1221,7 +1295,7 @@ const viewer = new ImagesViewer({
           </tr>
           <tr>
             <td><span class="kbd">拖拽</span></td>
-            <td>平移图片（缩放不等于 100% 时可用，允许拖出图片本身的一半）</td>
+            <td>平移图片（任何缩放倍率下均可，允许越过边界 60px，松手自动回弹）</td>
           </tr>
         </tbody>
       </table>
@@ -1518,8 +1592,16 @@ export function unmount() {
           images: images.slice(0, 10),
           i18n: {
             buttons: {
-              prev: 'Previous',
-              next: 'Next',
+              zoomIn: 'Zoom In',
+              zoomOut: 'Zoom Out',
+              rotateLeft: 'Rotate Left',
+              rotateRight: 'Rotate Right',
+              reset: 'Reset',
+              download: 'Download',
+              copy: 'Copy',
+              fullscreen: 'Fullscreen',
+              info: 'Info',
+              thumbnails: 'Thumbnails',
               close: 'Close',
               loading: 'Loading...',
             },
@@ -1527,6 +1609,9 @@ export function unmount() {
               name: 'Name:',
               dimensions: 'Size:',
             },
+            helpTitle: 'Instructions',
+            helpKeys: 'Shortcuts',
+            helpGestures: 'Gestures',
           },
         })
       }
@@ -1651,7 +1736,7 @@ export function unmount() {
           })),
           itemClass: 'item-default',
           activeItemClass: 'active-item-default',
-          activeThumbColor: '#ff6b6b',
+          theme: { activeColor: '#ff6b6b' },
           loop: true,
         })
       }

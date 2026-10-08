@@ -4,8 +4,10 @@
  */
 
 import './style.css'
-import { copyImageToClipboard } from 'copy-image-clipboard'
 
+import { buildInfoPanelHtml } from './components/info-panel.js'
+import { applyOrientation } from './components/orientation.js'
+import { initVirtualThumbnails } from './components/thumbnails.js'
 import { buildDOM } from './components/viewer-dom.js'
 import { bindEvents, unbindEvents } from './components/viewer-events.js'
 import {
@@ -18,122 +20,33 @@ import {
   rotate as doRotate,
   reset as doReset,
 } from './components/viewer-transform.js'
-import { VirtualThumbnailList } from './components/virtual-list.js'
-import { clamp, showToast, clearToast, off } from './utils/dom.js'
+import { clearToast, clamp, off } from './utils/dom.js'
+import { copyImageFromUrl, downloadImageFile } from './utils/image-file.js'
+import { mergeOptions } from './utils/options.js'
 
-const DEFAULT_OPTIONS = {
-  images: [],
-  props: { url: 'url', title: 'title', thumbnail: 'thumbnail' },
-  backdrop: false,
-  minZoomRatio: 0.1,
-  maxZoomRatio: 5,
-  loop: true,
-  retryOnError: false,
-  defaultFallbackImage: '',
-  zIndex: 5000,
-  className: 'images-viewer',
-  showThumbBar: true,
-  showTitle: true,
-  showCounter: true,
-  showNavButtons: true,
-  itemClass: '',
-  activeItemClass: '',
-  errorClass: '',
-  buttons: {
-    zoomIn: true,
-    zoomOut: true,
-    rotateLeft: true,
-    rotateRight: true,
-    reset: true,
-    download: true,
-    copy: false,
-    fullscreen: true,
-    prev: true,
-    next: true,
-    close: true,
-    topClose: true,
-    thumbnails: true,
-    info: true,
-  },
-  customButtons: [],
-  initialViewIndex: 0,
-  imageInfo: { visible: false, showName: true, showDimensions: true },
-  i18n: {
-    buttons: { prev: '上一张', next: '下一张', close: '关闭', loading: '加载中...' },
-    info: { name: '名称:', dimensions: '尺寸:' },
-    helpTitle: '操作指引',
-    helpKeys: '快捷键',
-    helpGestures: '手势',
-    helpButtons: '按钮',
-  },
-  theme: {
-    viewerBgColor: 'rgba(0,0,0,0.85)',
-    toolbarBgColor: 'rgba(40,40,40,0.8)',
-    toolbarBorderRadius: '30px',
-    toolbarPadding: '8px 16px',
-    toolbarBottom: '24px',
-    buttonBgColor: 'rgba(255,255,255,0.1)',
-    buttonHoverBg: 'rgba(255,255,255,0.25)',
-    buttonSize: '40px',
-    buttonFontSize: '18px',
-    buttonBorderRadius: '50%',
-    navButtonBgColor: 'rgba(255,255,255,0.1)',
-    navButtonHoverBg: 'rgba(255,255,255,0.25)',
-    navButtonSize: '48px',
-    navButtonFontSize: '20px',
-    navButtonBorderRadius: '50%',
-    topCloseBtnSize: '44px',
-    topCloseBtnTop: '16px',
-    topCloseBtnRight: '16px',
-    topCloseBtnFontSize: '22px',
-    topCloseBtnBgColor: 'rgba(255,255,255,0.1)',
-    topCloseBtnHoverBg: 'rgba(255,255,255,0.25)',
-    infoBgColor: 'rgba(40,40,40,0.8)',
-    infoBorderRadius: '8px',
-    infoPadding: '10px 14px',
-    infoFontSize: '13px',
-    infoTop: '60px',
-    infoLeft: '16px',
-    zoomIndicatorBg: 'rgba(40,40,40,0.8)',
-    zoomIndicatorBorderRadius: '16px',
-    zoomIndicatorPadding: '6px 12px',
-    zoomIndicatorFontSize: '13px',
-    zoomIndicatorTop: '16px',
-    zoomIndicatorLeft: '16px',
-    activeColor: '#4a9eff',
-    textColor: '#fff',
-    transitionSpeed: '0.3s',
-    thumbItemWidth: 80,
-    thumbItemHeight: 56,
-    thumbGap: 10,
-    thumbBarHeight: 90,
-  },
-  onShow: null,
-  onClose: null,
-  onChange: null,
-  onRotate: null,
-  onDrag: null,
-  onZoom: null,
-  onImageError: null,
-  onInfo: null,
-  onCounter: null,
-}
+const MAX_RETRY_COUNT = 3 // 加载失败后的最大自动重试次数
+const RETRY_DELAY_MS = 1000 // 失败重试的间隔
+const DEFAULT_PLAY_INTERVAL_MS = 5000 // play() 未指定 interval 时的轮播间隔
+const ZOOM_INDICATOR_HIDE_MS = 1500 // 缩放指示器自动隐藏延时
+const PERCENT = 100 // 缩放倍率 → 百分比
+const MS_PER_SECOND = 1000 // 解析 transitionSpeed（形如 '0.3s'）用
+const DEFAULT_CLOSE_DELAY_MS = 300 // 过渡时长解析失败时的关闭延时
 
-// 旧选项名 → 新选项名 兼容映射
-const OPTION_ALIASES = {
-  minScale: 'minZoomRatio',
-  maxScale: 'maxZoomRatio',
-  namespace: 'className',
-  closeOnMaskClick: 'backdrop',
-  initialIndex: 'initialViewIndex',
-}
+// 销毁时需清理的定时器：字段名 → 对应的取消函数
+const TIMER_CLEARERS = [
+  ['_zoomTimer', clearTimeout],
+  ['_retryTimer', clearTimeout],
+  ['_closeTimer', clearTimeout],
+  ['_showRaf', cancelAnimationFrame],
+  ['_playInterval', clearInterval],
+]
 
 class ImagesViewer {
   constructor(options) {
     if (typeof options === 'string') options = { images: [options] }
     if (Array.isArray(options)) options = { images: options }
 
-    this.options = this._mergeOptions(options)
+    this.options = mergeOptions(options)
     this.images = this._normalizeImages(this.options.images)
     this.currentIndex = clamp(this.options.initialViewIndex || 0, 0, this.images.length - 1)
     this.visible = false
@@ -168,44 +81,6 @@ class ImagesViewer {
     })
   }
 
-  _mergeOptions(opts) {
-    // 旧名称兼容映射
-    const normalizedOpts = {}
-    for (const key in opts) {
-      const targetKey = OPTION_ALIASES[key] || key
-      normalizedOpts[targetKey] = opts[key]
-    }
-
-    const merged = { ...DEFAULT_OPTIONS }
-    for (const key in normalizedOpts) {
-      if (
-        typeof normalizedOpts[key] === 'object' &&
-        !Array.isArray(normalizedOpts[key]) &&
-        normalizedOpts[key] !== null
-      ) {
-        merged[key] = this._deepMerge(merged[key], normalizedOpts[key])
-      } else {
-        merged[key] = normalizedOpts[key]
-      }
-    }
-    return merged
-  }
-
-  _deepMerge(target, source) {
-    if (typeof target !== 'object' || target === null) return source
-    if (typeof source !== 'object' || source === null) return source
-    if (Array.isArray(source)) return source
-    const result = { ...target }
-    for (const key in source) {
-      if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
-        result[key] = this._deepMerge(result[key], source[key])
-      } else {
-        result[key] = source[key]
-      }
-    }
-    return result
-  }
-
   _normalizeImages(images) {
     const { props } = this.options
     return images.map((item, idx) => {
@@ -222,6 +97,7 @@ class ImagesViewer {
         title: get('title') || `图片 ${idx + 1}`,
         thumbnail: get('thumbnail') || get('url') || '',
         fallback: get('fallback') || '',
+        orientation: get('orientation'),
         itemClass: get('itemClass') || '',
         activeItemClass: get('activeItemClass') || '',
         errorClass: get('errorClass') || '',
@@ -250,6 +126,10 @@ class ImagesViewer {
       : this.options.defaultFallbackImage
   }
 
+  _itemErrorClass(index) {
+    return this.images[index]?.errorClass || this.options.errorClass
+  }
+
   _show() {
     if (this.visible) return
     this.visible = true
@@ -261,7 +141,7 @@ class ImagesViewer {
     bindEvents(this)
 
     if (this.options.showThumbBar && this.options.buttons.thumbnails) {
-      this._initVirtualThumbnails()
+      initVirtualThumbnails(this)
     }
 
     this.loadCurrentImage(this.currentIndex, false)
@@ -277,99 +157,33 @@ class ImagesViewer {
     this._emit('onShow')
   }
 
-  _initVirtualThumbnails() {
-    const t = this.options.theme
-    const ns = this.options.className
-    this.vList = new VirtualThumbnailList(this.thumbBar, {
-      direction: 'horizontal',
-      total: this.images.length,
-      itemWidth: t.thumbItemWidth,
-      itemHeight: t.thumbItemHeight,
-      gap: t.thumbGap,
-      buffer: 3,
-      className: ns,
-      onRender: (index, el, img) => {
-        const src = this._getThumb(index)
-        const fallback = this._getFallback(index)
-        const imageData = this.images[index]
-        const isActive = index === this.currentIndex
-
-        // 应用 itemClass
-        const baseClass = ns + '__thumb-item'
-        const itemClass = imageData?.itemClass || this.options.itemClass
-        let className = itemClass ? `${baseClass} ${itemClass}` : baseClass
-        if (isActive) {
-          const activeClass = imageData?.activeItemClass || this.options.activeItemClass
-          if (activeClass) className += ` ${activeClass}`
-        }
-        el.className = className
-
-        el.style.border = isActive ? `2px solid ${t.activeColor}` : '2px solid transparent'
-        if (img.dataset.src !== src) {
-          img.dataset.src = src
-          img.src = src
-          img.onerror = () => {
-            if (fallback && img.src !== fallback) {
-              img.src = fallback
-            }
-          }
-        }
-      },
-      onClick: index => this.loadCurrentImage(index),
-      getItemClass: index => this.images[index]?.itemClass || this.options.itemClass,
-      getActiveItemClass: index =>
-        this.images[index]?.activeItemClass || this.options.activeItemClass,
-    })
-  }
-
   // ===== 图片加载 =====
-  loadCurrentImage(index, animated = true) {
+  loadCurrentImage(index, animated = true, { resetTransform = true } = {}) {
     const oldIndex = this.currentIndex
     this.currentIndex = clamp(index, 0, this.images.length - 1)
     const url = this._getUrl(this.currentIndex)
 
     this._updateCounter()
+    this._syncTitle()
 
-    // 更新标题
-    if (this.titleEl) {
-      this.titleEl.textContent = this._getTitle(this.currentIndex)
-    }
-
-    // 重置变换
-    this.scale = 1
-    this.rotation = 0
-    this.translateX = 0
-    this.translateY = 0
-    applyTransform(this)
-
-    // 重置错误恢复状态
-    if (this.mainImg) {
-      delete this.mainImg.dataset.fallbackTried
-      delete this.mainImg.dataset.usingFallback
-      const errCls = this.images[this.currentIndex]?.errorClass || this.options.errorClass
-      if (errCls && this.mainImg.classList) this.mainImg.classList.remove(errCls)
-      this._retryCounts.delete(this.currentIndex)
-    }
+    // 重置变换（update() 刷新数据时若当前图片未变化会跳过，保留用户缩放状态）
+    if (resetTransform) this._resetTransform()
+    this._resetErrorState()
 
     this.loadingEl.style.display = 'block'
     this.mainImg.style.opacity = '0.5'
     this.mainImg.src = url
 
-    // 应用 EXIF 方向旋转
-    const orientation = this.images[this.currentIndex]?.orientation
-    if (orientation && orientation > 1) {
-      this._applyExifOrientation(orientation)
-    }
+    this._applyOrientation()
+    this._syncThumbnails(animated)
 
-    if (this.vList) {
-      this.vList.scrollToIndex(this.currentIndex, animated)
-      this.vList.refreshActive(this.currentIndex, this.options.theme.activeColor)
+    // 索引未变化时不视为“切换”，避免数据刷新（update）触发误报
+    if (oldIndex !== this.currentIndex) {
+      this._emit('onChange', {
+        oldIndex,
+        direction: this.currentIndex > oldIndex ? 'next' : 'prev',
+      })
     }
-
-    this._emit('onChange', {
-      oldIndex,
-      direction: this.currentIndex > oldIndex ? 'next' : 'prev',
-    })
 
     // 信息面板已显示时，自动更新内容
     if (this.infoPanel && this.infoPanel.style.display === 'block') {
@@ -378,59 +192,71 @@ class ImagesViewer {
     return this
   }
 
+  _syncTitle() {
+    if (this.titleEl) {
+      this.titleEl.textContent = this._getTitle(this.currentIndex)
+    }
+  }
+
+  _resetTransform() {
+    this.scale = 1
+    this.rotation = 0
+    this.translateX = 0
+    this.translateY = 0
+    applyTransform(this)
+  }
+
+  _resetErrorState() {
+    if (!this.mainImg) return
+
+    delete this.mainImg.dataset.fallbackTried
+    delete this.mainImg.dataset.usingFallback
+    const errCls = this._itemErrorClass(this.currentIndex)
+    if (errCls && this.mainImg.classList) this.mainImg.classList.remove(errCls)
+    this._retryCounts.delete(this.currentIndex)
+  }
+
+  /**
+   * 应用图片方向（EXIF 1-8 → CSS transform），逻辑见 components/orientation.js：
+   * 数据里显式的 orientation 优先，其次 autoOrientation 自动解析，否则清除方向。
+   */
+  _applyOrientation() {
+    applyOrientation(this)
+  }
+
+  _syncThumbnails(animated) {
+    if (!this.vList) return
+
+    this.vList.scrollToIndex(this.currentIndex, animated)
+    this.vList.refreshActive(this.currentIndex, this.options.theme.activeColor)
+  }
+
   _refreshInfoPanel() {
-    const panel = this.infoPanel
-    const { imageInfo, i18n, className } = this.options
-    const ns = className
     const img = this.images[this.currentIndex]
-    let html = ''
     const custom = this._emit('onInfo', {
       scale: this.scale,
       rotation: this.rotation,
     })
-    if (typeof custom === 'string') {
-      html = custom
-    } else {
-      if (imageInfo.showName) html += `<div>${i18n.info.name} ${img.title}</div>`
-      if (imageInfo.showDimensions) {
-        html += `<div>${i18n.info.dimensions} ${this.mainImg.naturalWidth || '-'} × ${this.mainImg.naturalHeight || '-'}</div>`
-      }
-    }
 
-    html += `
-      <div class="${ns}__info-divider"></div>
-      <div class="${ns}__help-title">${i18n.helpTitle}</div>
-      <div class="${ns}__help-section">
-        <div class="${ns}__help-label">${i18n.helpKeys}</div>
-        <div class="${ns}__help-row"><kbd>←</kbd> / <kbd>→</kbd> <span>上一张 / 下一张</span></div>
-        <div class="${ns}__help-row"><kbd>+</kbd> / <kbd>-</kbd> <span>放大 / 缩小</span></div>
-        <div class="${ns}__help-row"><kbd>0</kbd> <span>重置缩放与旋转</span></div>
-        <div class="${ns}__help-row"><kbd>f</kbd> <span>切换全屏</span></div>
-        <div class="${ns}__help-row"><kbd>i</kbd> <span>切换信息面板</span></div>
-        <div class="${ns}__help-row"><kbd>Esc</kbd> <span>关闭查看器</span></div>
-        <div class="${ns}__help-row"><kbd>g</kbd> <span>跳转到指定图片</span></div>
-      </div>
-      <div class="${ns}__help-section">
-        <div class="${ns}__help-label">${i18n.helpGestures}</div>
-        <div class="${ns}__help-row"><span>双击</span> <span>重置变换</span></div>
-        <div class="${ns}__help-row"><span>滚轮</span> <span>缩放</span></div>
-        <div class="${ns}__help-row"><span>拖拽</span> <span>平移图片（缩放后）</span></div>
-      </div>
-    `
-
-    panel.innerHTML = html
+    this.infoPanel.innerHTML = buildInfoPanelHtml({
+      ns: this.options.className,
+      i18n: this.options.i18n,
+      imageInfo: this.options.imageInfo,
+      title: img.title,
+      mainImg: this.mainImg,
+      custom,
+    })
   }
 
   _onMainLoad() {
     this.loadingEl.style.display = 'none'
     this.mainImg.style.opacity = '1'
     delete this.mainImg.dataset.fallbackTried
+    delete this.mainImg.dataset.usingFallback
     this._retryCounts.delete(this.currentIndex)
 
-    delete this.mainImg.dataset.usingFallback
-
     // 移除错误 class
-    const errCls = this.images[this.currentIndex]?.errorClass || this.options.errorClass
+    const errCls = this._itemErrorClass(this.currentIndex)
     if (errCls && this.mainImg.classList) this.mainImg.classList.remove(errCls)
   }
 
@@ -452,18 +278,18 @@ class ImagesViewer {
     delete this.mainImg.dataset.usingFallback
 
     // 应用错误 class
-    const errCls = this.images[this.currentIndex]?.errorClass || this.options.errorClass
+    const errCls = this._itemErrorClass(this.currentIndex)
     if (errCls && this.mainImg.classList) this.mainImg.classList.add(errCls)
 
     this._emit('onImageError', { url })
 
     if (this.options.retryOnError) {
       const retryCount = (this._retryCounts.get(this.currentIndex) || 0) + 1
-      if (retryCount > 3) return
+      if (retryCount > MAX_RETRY_COUNT) return
       this._retryCounts.set(this.currentIndex, retryCount)
       this._retryTimer = setTimeout(() => {
         if (this.mainImg) this.mainImg.src = url + '?retry=' + Date.now()
-      }, 1000)
+      }, RETRY_DELAY_MS)
     }
   }
 
@@ -522,22 +348,6 @@ class ImagesViewer {
     return this
   }
 
-  scale(scaleX, scaleY = scaleX) {
-    // 仅支持翻转（负值）或重置，不扩展为自由缩放
-    if (scaleX < 0 || scaleY < 0) {
-      this.mainImg.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale * scaleX}, ${this.scale * scaleY}) rotate(${this.rotation}deg)`
-    }
-    return this
-  }
-
-  scaleX(scaleX) {
-    return this.scale(scaleX, 1)
-  }
-
-  scaleY(scaleY) {
-    return this.scale(1, scaleY)
-  }
-
   toggle() {
     // 在自然尺寸和初始尺寸之间切换
     const naturalW = this.mainImg.naturalWidth || this.mainImg.width || 1
@@ -552,7 +362,10 @@ class ImagesViewer {
   }
 
   play() {
-    this._playInterval = setInterval(() => this.next(), this.options.interval || 5000)
+    this._playInterval = setInterval(
+      () => this.next(),
+      this.options.interval || DEFAULT_PLAY_INTERVAL_MS
+    )
     return this
   }
 
@@ -565,25 +378,45 @@ class ImagesViewer {
   }
 
   update() {
-    // 重新初始化图片数据，用于动态增删图片
-    this._normalizeImages()
+    // 重新初始化图片数据，用于动态增删/替换图片
+    const prevIndex = this.currentIndex
+    const prevUrl = this._getUrl(prevIndex)
+
+    this.images = this._normalizeImages(this.options.images)
+    this._retryCounts.clear()
+
+    // 数据源可能被整体替换（长度不变但 URL 变化），需强制缩略图池重跑渲染
     if (this.vList) {
       this.vList.updateTotal(this.images.length)
-      this.vList.refreshActive(this.currentIndex, this.options.theme.activeColor)
+      this.vList.invalidate()
     }
-    this._updateCounter()
+
+    // 图片被全部删除时没有可加载的内容，仅同步计数器
+    if (this.images.length === 0) {
+      this.currentIndex = 0
+      this._updateCounter()
+      return this
+    }
+
+    // 图片被删除后当前索引可能越界，先收敛再加载
+    // 注意不要在调用 loadCurrentImage 前改写 currentIndex，否则其内部记录的 oldIndex 会失真
+    const idx = clamp(prevIndex, 0, this.images.length - 1)
+
+    // 当前图片未变化时保留缩放/旋转状态，仅换图才重置变换
+    const sameImage = idx === prevIndex && this._getUrl(idx) === prevUrl
+    this.loadCurrentImage(idx, false, { resetTransform: !sameImage })
     return this
   }
 
   tooltip() {
     // 显示当前缩放百分比
     if (this.zoomIndEl) {
-      this.zoomIndEl.textContent = `缩放: ${Math.round(this.scale * 100)}%`
+      this.zoomIndEl.textContent = `缩放: ${Math.round(this.scale * PERCENT)}%`
       this.zoomIndEl.style.opacity = '1'
       clearTimeout(this._zoomTimer)
       this._zoomTimer = setTimeout(() => {
         this.zoomIndEl.style.opacity = '0'
-      }, 1500)
+      }, ZOOM_INDICATOR_HIDE_MS)
     }
     return this
   }
@@ -696,97 +529,11 @@ class ImagesViewer {
   }
 
   async copyImage() {
-    const url = this._getUrl(this.currentIndex)
-    const toastClass = this.options.className + '__toast'
-
-    showToast('正在复制...', 'info', this.container, toastClass)
-
-    try {
-      await copyImageToClipboard(url)
-      showToast('图片已复制到剪贴板', 'success', this.container, toastClass)
-      return true
-    } catch (err) {
-      const msg = err.message || ''
-      if (msg.includes('Cannot copy this type of image')) {
-        showToast('复制失败：仅支持 PNG 和 JPG 格式图片', 'error', this.container, toastClass)
-      } else {
-        showToast('复制失败：' + msg, 'error', this.container, toastClass)
-      }
-      return false
-    }
+    return copyImageFromUrl(this)
   }
 
   async downloadImage() {
-    const url = this._getUrl(this.currentIndex)
-    const title = this._getTitle(this.currentIndex) || 'image'
-    const img = this.mainImg
-    const toastClass = this.options.className + '__toast'
-    const toast = (msg, ok) => showToast(msg, ok ? 'success' : 'error', this.container, toastClass)
-
-    showToast('正在下载...', 'info', this.container, toastClass)
-
-    // 方式 A：canvas 导出 dataURL + a.download（图片已加载）
-    try {
-      const canvas = document.createElement('canvas')
-      canvas.width = img.naturalWidth || img.width || 1920
-      canvas.height = img.naturalHeight || img.height || 1080
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0)
-      const dataUrl = canvas.toDataURL('image/png')
-      const a = document.createElement('a')
-      a.href = dataUrl
-      a.download = title + '.png'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      toast('已开始下载', true)
-      return
-    } catch {
-      // 继续降级
-    }
-
-    // 方式 B：fetch blob + URL.createObjectURL + a.download（尝试跨域）
-    try {
-      const res = await fetch(url, { mode: 'cors', cache: 'no-store' })
-      if (res.ok) {
-        const blob = await res.blob()
-        const blobUrl = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = blobUrl
-        a.download = title + (blob.type === 'image/jpeg' ? '.jpg' : '.png')
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        URL.revokeObjectURL(blobUrl)
-        toast('已开始下载', true)
-        return
-      }
-    } catch {
-      // 继续降级
-    }
-
-    // 方式 C：直接 a[download]（同域有效，跨域可能不生效）
-    try {
-      const a = document.createElement('a')
-      a.href = url
-      a.download = title
-      a.target = '_blank'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      toast('已开始下载', true)
-      return
-    } catch {
-      // 继续降级
-    }
-
-    // 方式 D：最后降级，在新窗口打开
-    try {
-      window.open(url, '_blank')
-      toast('已在新窗口打开图片', true)
-    } catch {
-      toast('下载失败', false)
-    }
+    await downloadImageFile(this)
   }
 
   // ===== 关闭 =====
@@ -794,45 +541,32 @@ class ImagesViewer {
     if (!this.visible) return this
     this.visible = false
     this.container.style.opacity = '0'
-    const delay = parseFloat(this.options.theme.transitionSpeed) * 1000 || 300
+    const delay =
+      parseFloat(this.options.theme.transitionSpeed) * MS_PER_SECOND || DEFAULT_CLOSE_DELAY_MS
     this._closeTimer = setTimeout(() => this._destroy(), delay)
     return this
   }
 
-  _destroy() {
-    unbindEvents(this)
+  _clearTimers() {
+    for (const [key, clear] of TIMER_CLEARERS) {
+      if (this[key]) {
+        clear(this[key])
+        this[key] = null
+      }
+    }
+  }
 
-    // 清理所有 timer
-    if (this._zoomTimer) {
-      clearTimeout(this._zoomTimer)
-      this._zoomTimer = null
-    }
-    if (this._retryTimer) {
-      clearTimeout(this._retryTimer)
-      this._retryTimer = null
-    }
-    if (this._closeTimer) {
-      clearTimeout(this._closeTimer)
-      this._closeTimer = null
-    }
-    if (this._showRaf) {
-      cancelAnimationFrame(this._showRaf)
-      this._showRaf = null
-    }
-    if (this._playInterval) {
-      clearInterval(this._playInterval)
-      this._playInterval = null
-    }
-
-    // 清理 toast
+  _removeToastNodes() {
     clearToast()
-    const ns = this.options.className
-    if (document.querySelectorAll) {
-      document.querySelectorAll('.' + ns + '__toast').forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el)
-      })
-    }
+    if (!document.querySelectorAll) return
 
+    const ns = this.options.className
+    document.querySelectorAll('.' + ns + '__toast').forEach(el => {
+      if (el.parentNode) el.parentNode.removeChild(el)
+    })
+  }
+
+  _detachImageHandlers() {
     if (this._onMainLoadRef && this.mainImg) {
       off(this.mainImg, 'load', this._onMainLoadRef)
       this._onMainLoadRef = null
@@ -841,6 +575,14 @@ class ImagesViewer {
       off(this.mainImg, 'error', this._onMainErrorRef)
       this._onMainErrorRef = null
     }
+  }
+
+  _destroy() {
+    unbindEvents(this)
+    this._clearTimers()
+    this._removeToastNodes()
+    this._detachImageHandlers()
+
     if (this._retryCounts) {
       this._retryCounts.clear()
     }

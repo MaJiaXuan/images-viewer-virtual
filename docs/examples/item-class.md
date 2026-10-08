@@ -4,7 +4,7 @@ new ImagesViewer({
   images: styled,
   itemClass: 'item-default',
   activeItemClass: 'active-default',
-  activeThumbColor: '#ff6b6b',
+  theme: { activeColor: '#ff6b6b' },
 })`
 </script>
 

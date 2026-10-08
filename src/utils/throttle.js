@@ -2,7 +2,9 @@
  * 节流函数
  */
 
-export function throttle(fn, wait = 16) {
+const DEFAULT_WAIT_MS = 16 // ≈ 一帧（60fps），即默认按帧节流
+
+export function throttle(fn, wait = DEFAULT_WAIT_MS) {
   let last = 0
   return function (...args) {
     const now = Date.now()

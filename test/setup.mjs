@@ -5,15 +5,28 @@
 const mockElement = tag => ({
   tagName: tag,
   style: {
-    setProperty(name, value) { this[name] = value },
-    getPropertyValue(name) { return this[name] || '' },
+    setProperty(name, value) {
+      this[name] = value
+    },
+    getPropertyValue(name) {
+      return this[name] || ''
+    },
   },
   className: '',
   classList: {
     _cls: '',
-    add(c) { this._cls += (this._cls ? ' ' : '') + c },
-    remove(c) { this._cls = this._cls.split(' ').filter(s => s !== c).join(' ') },
-    contains(c) { return this._cls.split(' ').includes(c) },
+    add(c) {
+      this._cls += (this._cls ? ' ' : '') + c
+    },
+    remove(c) {
+      this._cls = this._cls
+        .split(' ')
+        .filter(s => s !== c)
+        .join(' ')
+    },
+    contains(c) {
+      return this._cls.split(' ').includes(c)
+    },
   },
   textContent: '',
   dataset: {},
@@ -79,11 +92,11 @@ global.window = {}
 global.Image = MockImage
 global.requestAnimationFrame = cb => setTimeout(cb, 0)
 global.cancelAnimationFrame = id => clearTimeout(id)
-global.getComputedStyle = (el) => {
+global.getComputedStyle = el => {
   const style = el.style || {}
   return {
     getPropertyValue(name) {
-      return style.getPropertyValue ? style.getPropertyValue(name) : (style[name] || '')
+      return style.getPropertyValue ? style.getPropertyValue(name) : style[name] || ''
     },
     marginLeft: style.marginLeft || '0px',
     marginRight: style.marginRight || '0px',

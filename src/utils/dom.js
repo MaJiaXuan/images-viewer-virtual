@@ -51,6 +51,10 @@ export function createImg(className, styles = {}) {
   return img
 }
 
+// Toast 动画与驻留时长
+const TOAST_FADE_MS = 300 // 淡出过渡时长，与下方 transition 保持一致
+const TOAST_DURATION_MS = 2000 // 自动消失前的展示时长
+
 // 单例 Toast 状态
 let toastEl = null
 let toastTimer = null
@@ -116,9 +120,9 @@ export function showToast(msg, type = 'info', container = document.body, classNa
           toastEl.parentNode.removeChild(toastEl)
         }
         toastEl = null
-      }, 300)
+      }, TOAST_FADE_MS)
     }
-  }, 2000)
+  }, TOAST_DURATION_MS)
 
   return toastEl
 }

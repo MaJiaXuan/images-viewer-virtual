@@ -55,6 +55,8 @@ Thumbs.db
 # VitePress 构建产物和缓存
 docs/.vitepress/dist
 docs/.vitepress/cache
+docs/.vitepress/.temp
 
 # 临时文档
 FOLDER_STRUCTURE.md
+/.workbuddy/memory/

@@ -4,6 +4,47 @@
 
 import { on, off } from '../utils/dom.js'
 
+const WHEEL_ZOOM_STEP = 0.1 // 滚轮每格的缩放步长
+const KEY_ZOOM_STEP = 0.2 // 快捷键 +/- 的缩放步长
+
+// 事件类型 → 解绑目标（viewer 上的字段名，或全局的 'document'）
+const BOUND_EVENTS = [
+  ['click', 'container'],
+  ['mousedown', 'stage'],
+  ['mousemove', 'document'],
+  ['mouseup', 'document'],
+  ['touchstart', 'stage'],
+  ['touchmove', 'document'],
+  ['touchend', 'document'],
+  ['wheel', 'stage'],
+  ['keydown', 'document'],
+  ['dblclick', 'stage'],
+]
+
+// 快捷键 → 动作。查表替代 switch，避免 keydown 处理函数的分支堆积
+const KEY_ACTIONS = {
+  ArrowLeft: viewer => viewer.prev(),
+  ArrowRight: viewer => viewer.next(),
+  Home: viewer => viewer.view(0, false),
+  End: viewer => viewer.view(viewer.images.length - 1, false),
+  Escape: viewer => viewer.hide(),
+  '+': viewer => viewer.zoom(KEY_ZOOM_STEP),
+  '=': viewer => viewer.zoom(KEY_ZOOM_STEP),
+  '-': viewer => viewer.zoom(-KEY_ZOOM_STEP),
+  _: viewer => viewer.zoom(-KEY_ZOOM_STEP),
+  0: viewer => viewer.reset(),
+  f: viewer => viewer.toggleFullscreen(),
+  g: gotoImage,
+  G: gotoImage,
+  i: viewer => viewer.toggleImageInfo(),
+}
+
+function gotoImage(viewer) {
+  const answer = prompt('跳转到第几张图片? (1 - ' + viewer.images.length + ')') || '0'
+  const n = parseInt(answer, 10)
+  if (!Number.isNaN(n) && n > 0) viewer.view(n - 1)
+}
+
 export function bindEvents(viewer) {
   const { container, stage, options } = viewer
 
@@ -55,7 +96,7 @@ export function bindEvents(viewer) {
   // 滚轮缩放（以鼠标位置为中心）
   handlers.wheel = e => {
     e.preventDefault()
-    const delta = e.deltaY > 0 ? -0.1 : 0.1
+    const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
     const rect = stage.getBoundingClientRect()
     const cx = e.clientX - rect.left
     const cy = e.clientY - rect.top
@@ -75,66 +116,22 @@ export function bindEvents(viewer) {
 }
 
 function _onKey(viewer, e) {
-  switch (e.key) {
-    case 'ArrowLeft':
-      viewer.prev()
-      break
-    case 'ArrowRight':
-      viewer.next()
-      break
-    case 'Home':
-      viewer.view(0, false)
-      break
-    case 'End':
-      viewer.view(viewer.images.length - 1, false)
-      break
-    case 'Escape':
-      viewer.hide()
-      break
-    case '+':
-    case '=':
-      viewer.zoom(0.2)
-      break
-    case '-':
-    case '_':
-      viewer.zoom(-0.2)
-      break
-    case '0':
-      viewer.reset()
-      break
-    case 'f':
-      viewer.toggleFullscreen()
-      break
-    case 'g':
-    case 'G':
-      {
-        const n = parseInt(
-          prompt('跳转到第几张图片? (1 - ' + viewer.images.length + ')') || '0',
-          10
-        )
-        if (!Number.isNaN(n) && n > 0) viewer.view(n - 1)
-      }
-      break
-    case 'i':
-      viewer.toggleImageInfo()
-      break
-  }
+  const action = KEY_ACTIONS[e.key]
+  if (action) action(viewer)
+}
+
+function resolveTarget(viewer, key) {
+  return key === 'document' ? document : viewer[key]
 }
 
 export function unbindEvents(viewer) {
-  const { container, stage, _handlers } = viewer
-  if (!_handlers) return
+  const handlers = viewer._handlers
+  if (!handlers) return
 
-  if (_handlers.click) off(container, 'click', _handlers.click)
-  if (_handlers.mousedown) off(stage, 'mousedown', _handlers.mousedown)
-  if (_handlers.mousemove) off(document, 'mousemove', _handlers.mousemove)
-  if (_handlers.mouseup) off(document, 'mouseup', _handlers.mouseup)
-  if (_handlers.touchstart) off(stage, 'touchstart', _handlers.touchstart)
-  if (_handlers.touchmove) off(document, 'touchmove', _handlers.touchmove)
-  if (_handlers.touchend) off(document, 'touchend', _handlers.touchend)
-  if (_handlers.wheel) off(stage, 'wheel', _handlers.wheel)
-  if (_handlers.keydown) off(document, 'keydown', _handlers.keydown)
-  if (_handlers.dblclick) off(stage, 'dblclick', _handlers.dblclick)
+  for (const [type, targetKey] of BOUND_EVENTS) {
+    const fn = handlers[type]
+    if (fn) off(resolveTarget(viewer, targetKey), type, fn)
+  }
 
   viewer._handlers = null
 }

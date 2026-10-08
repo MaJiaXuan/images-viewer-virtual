@@ -2,7 +2,26 @@ import js from '@eslint/js'
 import pluginImport from 'eslint-plugin-import'
 import globals from 'globals'
 
+// 规则阈值单独命名：no-magic-numbers 允许 `const NAME = 3` 这种形式，直接写字面量则会被报错
+const MAX_NESTED_CALLBACKS = 3
+const MAX_PARAMS = 4
+
 export default [
+  {
+    // 全局忽略（仅含 ignores 的配置对象即为全局忽略项，等价于旧版 .eslintignore）
+    ignores: [
+      'dist',
+      'node_modules',
+      'public',
+      '*.min.js',
+      'scripts',
+      '**/*.local',
+      'docs/.vitepress/cache',
+      'docs/.vitepress/dist',
+      'docs/.vitepress/.temp',
+      'docs/public/dist',
+    ],
+  },
   js.configs.recommended,
   pluginImport.flatConfigs.recommended,
   {
@@ -58,8 +77,8 @@ export default [
         'warn',
         { ignore: [-1, 0, 1], ignoreArrayIndexes: true, enforceConst: true },
       ],
-      'max-nested-callbacks': ['warn', 3],
-      'max-params': ['warn', 4],
+      'max-nested-callbacks': ['warn', MAX_NESTED_CALLBACKS],
+      'max-params': ['warn', MAX_PARAMS],
       'no-var': 'error',
       'prefer-const': 'error',
       'prefer-destructuring': ['warn', { object: true, array: false }],
@@ -70,15 +89,12 @@ export default [
     },
   },
   {
-    ignores: [
-      'dist',
-      'node_modules',
-      'public',
-      '*.min.js',
-      'scripts',
-      'docs/.vitepress/cache',
-      'docs/.vitepress/dist',
-      'docs/public/dist',
-    ],
+    // 测试用例天然以字面量做断言（clamp(5, 0, 10) 之类），逐个命名只会降低可读性；
+    // 单文件承载全部用例也属预期，因此对测试目录放宽这两条纯风格规则。
+    files: ['test/**/*.{js,mjs,cjs}'],
+    rules: {
+      'no-magic-numbers': 'off',
+      'max-lines': 'off',
+    },
   },
 ]

@@ -9,7 +9,7 @@ ImagesViewer 是纯原生 JavaScript 库，**不依赖任何框架**，因此可
 ### 函数组件 + Hooks
 
 ```jsx
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 import ImagesViewer from 'images-viewer-virtual'
 
 function Gallery({ images, currentIndex }) {

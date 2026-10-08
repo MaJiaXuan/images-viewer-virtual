@@ -1,5 +1,12 @@
-> 0.5% in CN
-last 2 versions
-not dead
-not IE 11
-not op_mini all
+# 库产物的浏览器兼容目标
+#
+# 用途：UMD 产物按本文件降级语法（vite.config.js 通过 browserslist-to-esbuild 读取，
+#       转换成 esbuild 的 target）。ESM 产物按 esnext 输出、不做降级，不读取本文件。
+#
+# 这里限定的是「语法」下限：运行时 API（如 navigator.clipboard、Fullscreen）不随本文件
+# 补 polyfill，相关代码已做能力检测并降级（详见 README「浏览器支持」）。
+chrome >= 60
+edge >= 79
+firefox >= 60
+safari >= 12
+ios_saf >= 12

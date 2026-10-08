@@ -1,15 +1,44 @@
 /**
  * 查看器 DOM 构建 — BEM 命名规范
+ *
+ * 拆成若干职责单一的小函数，buildDOM 只负责按既定顺序编排。
+ * 各子函数统一从 viewer.options 读取配置，避免参数列表膨胀。
  */
 
 import { createBtn, createDiv, createImg, on } from '../utils/dom.js'
 
+const ZOOM_STEP = 0.2 // 工具栏缩放按钮的单步倍率
+const ROTATE_STEP_DEG = 90 // 工具栏旋转按钮的单步角度
+const FALLBACK_BORDER_RADIUS = '50%' // 主题未指定圆角时的兜底值
+
 export function buildDOM(viewer) {
   const opts = viewer.options
-  const t = opts.theme
-  const ns = opts.className
+  const container = createContainer(opts, opts.theme, opts.className)
+  const stage = createStage(opts.className)
+  viewer.stage = stage
 
-  const container = createDiv(ns, {
+  // 以下顺序即 DOM 中 stage 子节点的顺序，不要随意调整
+  buildMainImage(viewer, stage)
+  buildLoading(viewer, stage)
+  buildTitle(viewer, stage)
+  buildCounter(viewer, stage)
+  buildZoomIndicator(viewer, stage)
+  buildInfoPanel(viewer, stage)
+  buildNavButtons(viewer, stage)
+  buildTopCloseButton(viewer, stage)
+  buildToolbar(viewer, stage)
+
+  container.appendChild(stage)
+  document.body.appendChild(container)
+  viewer.container = container
+
+  buildThumbBar(viewer, container)
+
+  return { container, stage }
+}
+
+function createContainer(opts, t, ns) {
+  return createDiv(ns, {
     position: 'fixed',
     inset: '0',
     zIndex: String(opts.zIndex),
@@ -23,9 +52,10 @@ export function buildDOM(viewer) {
     opacity: '0',
     transition: `opacity ${t.transitionSpeed}`,
   })
+}
 
-  // 主舞台
-  const stage = createDiv(ns + '__stage', {
+function createStage(ns) {
+  return createDiv(ns + '__stage', {
     position: 'relative',
     flex: '1',
     width: '100%',
@@ -35,8 +65,10 @@ export function buildDOM(viewer) {
     justifyContent: 'center',
     cursor: 'grab',
   })
+}
 
-  // 主图 img（纯原生）
+function buildMainImage(viewer, stage) {
+  const { className: ns, theme: t } = viewer.options
   const mainImg = createImg(ns + '__image', {
     maxWidth: '90vw',
     maxHeight: '85vh',
@@ -46,18 +78,22 @@ export function buildDOM(viewer) {
     userSelect: 'none',
     pointerEvents: 'auto',
   })
+
   const onMainLoad = () => viewer._onMainLoad()
   const onMainError = () => viewer._onMainError()
   on(mainImg, 'load', onMainLoad)
   on(mainImg, 'error', onMainError)
   mainImg.loading = 'lazy'
   mainImg.decoding = 'async'
+
   stage.appendChild(mainImg)
   viewer.mainImg = mainImg
   viewer._onMainLoadRef = onMainLoad
   viewer._onMainErrorRef = onMainError
+}
 
-  // Loading
+function buildLoading(viewer, stage) {
+  const { className: ns, theme: t, i18n } = viewer.options
   const loading = createDiv(ns + '__loading', {
     position: 'absolute',
     color: t.textColor,
@@ -65,46 +101,52 @@ export function buildDOM(viewer) {
     display: 'none',
     pointerEvents: 'none',
   })
-  loading.textContent = opts.i18n.buttons.loading
+  loading.textContent = i18n.buttons.loading
   stage.appendChild(loading)
   viewer.loadingEl = loading
+}
 
-  // 标题
-  if (opts.showTitle) {
-    const titleEl = createDiv(ns + '__title', {
-      position: 'absolute',
-      bottom: '120px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      color: t.textColor,
-      fontSize: '14px',
-      opacity: '0.9',
-      pointerEvents: 'none',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      maxWidth: '80%',
-    })
-    stage.appendChild(titleEl)
-    viewer.titleEl = titleEl
-  }
+function buildTitle(viewer, stage) {
+  const { className: ns, theme: t, showTitle } = viewer.options
+  if (!showTitle) return
 
-  // 计数器
-  if (opts.showCounter) {
-    const counter = createDiv(ns + '__counter', {
-      position: 'absolute',
-      bottom: '96px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      color: t.textColor,
-      fontSize: '13px',
-      opacity: '0.8',
-    })
-    stage.appendChild(counter)
-    viewer.counterEl = counter
-  }
+  const titleEl = createDiv(ns + '__title', {
+    position: 'absolute',
+    bottom: '120px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    color: t.textColor,
+    fontSize: '14px',
+    opacity: '0.9',
+    pointerEvents: 'none',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '80%',
+  })
+  stage.appendChild(titleEl)
+  viewer.titleEl = titleEl
+}
 
-  // 缩放指示器
+function buildCounter(viewer, stage) {
+  const { className: ns, theme: t, showCounter } = viewer.options
+  if (!showCounter) return
+
+  const counter = createDiv(ns + '__counter', {
+    position: 'absolute',
+    bottom: '96px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    color: t.textColor,
+    fontSize: '13px',
+    opacity: '0.8',
+  })
+  stage.appendChild(counter)
+  viewer.counterEl = counter
+}
+
+function buildZoomIndicator(viewer, stage) {
+  const { className: ns, theme: t } = viewer.options
   const zoomInd = createDiv(ns + '__zoom-indicator', {
     position: 'absolute',
     top: t.zoomIndicatorTop,
@@ -120,8 +162,10 @@ export function buildDOM(viewer) {
   })
   stage.appendChild(zoomInd)
   viewer.zoomIndEl = zoomInd
+}
 
-  // 信息面板
+function buildInfoPanel(viewer, stage) {
+  const { className: ns, theme: t } = viewer.options
   const infoPanel = createDiv(ns + '__info', {
     position: 'absolute',
     top: t.infoTop,
@@ -137,8 +181,14 @@ export function buildDOM(viewer) {
   })
   stage.appendChild(infoPanel)
   viewer.infoPanel = infoPanel
+}
 
-  // 导航按钮
+function buildNavButtons(viewer, stage) {
+  const opts = viewer.options
+  const ns = opts.className
+  const t = opts.theme
+  const enabled = opts.showNavButtons && viewer.images.length > 1
+
   const btnCfg = {
     size: t.navButtonSize,
     fontSize: t.navButtonFontSize,
@@ -148,7 +198,7 @@ export function buildDOM(viewer) {
     textColor: t.textColor,
   }
 
-  if (opts.showNavButtons && opts.buttons.prev && viewer.images.length > 1) {
+  if (enabled && opts.buttons.prev) {
     const prevBtn = createBtn('←', ns + '__nav-btn ' + ns + '__nav-btn--prev', btnCfg)
     prevBtn.title = '上一张'
     on(prevBtn, 'click', e => {
@@ -158,7 +208,7 @@ export function buildDOM(viewer) {
     stage.appendChild(prevBtn)
     viewer._navPrevEl = prevBtn
   }
-  if (opts.showNavButtons && opts.buttons.next && viewer.images.length > 1) {
+  if (enabled && opts.buttons.next) {
     const nextBtn = createBtn('→', ns + '__nav-btn ' + ns + '__nav-btn--next', btnCfg)
     nextBtn.title = '下一张'
     on(nextBtn, 'click', e => {
@@ -168,27 +218,36 @@ export function buildDOM(viewer) {
     stage.appendChild(nextBtn)
     viewer._navNextEl = nextBtn
   }
+}
 
-  // 右上角关闭
-  if (opts.buttons.topClose) {
-    const closeBtn = createBtn('×', ns + '__close-btn', {
-      size: t.topCloseBtnSize,
-      fontSize: t.topCloseBtnFontSize,
-      bg: t.topCloseBtnBgColor,
-      hoverBg: t.topCloseBtnHoverBg,
-      radius: t.topCloseBtnBorderRadius || '50%',
-      textColor: t.textColor,
-    })
-    closeBtn.title = '关闭'
-    closeBtn.style.cssText += `position:absolute;top:${t.topCloseBtnTop};right:${t.topCloseBtnRight};`
-    on(closeBtn, 'click', e => {
-      e.stopPropagation()
-      viewer.hide()
-    })
-    stage.appendChild(closeBtn)
-  }
+function buildTopCloseButton(viewer, stage) {
+  const opts = viewer.options
+  const ns = opts.className
+  const t = opts.theme
+  if (!opts.buttons.topClose) return
 
-  // 工具栏
+  const closeBtn = createBtn('×', ns + '__close-btn', {
+    size: t.topCloseBtnSize,
+    fontSize: t.topCloseBtnFontSize,
+    bg: t.topCloseBtnBgColor,
+    hoverBg: t.topCloseBtnHoverBg,
+    radius: t.topCloseBtnBorderRadius || FALLBACK_BORDER_RADIUS,
+    textColor: t.textColor,
+  })
+  closeBtn.title = '关闭'
+  closeBtn.style.cssText += `position:absolute;top:${t.topCloseBtnTop};right:${t.topCloseBtnRight};`
+  on(closeBtn, 'click', e => {
+    e.stopPropagation()
+    viewer.hide()
+  })
+  stage.appendChild(closeBtn)
+}
+
+function buildToolbar(viewer, stage) {
+  const opts = viewer.options
+  const ns = opts.className
+  const t = opts.theme
+
   const toolbar = createDiv(ns + '__toolbar', {
     position: 'absolute',
     bottom: t.toolbarBottom,
@@ -203,7 +262,7 @@ export function buildDOM(viewer) {
     backdropFilter: 'blur(8px)',
   })
 
-  const toolBtnCfg = {
+  const cfg = {
     size: t.buttonSize,
     fontSize: t.buttonFontSize,
     bg: t.buttonBgColor,
@@ -212,65 +271,62 @@ export function buildDOM(viewer) {
     textColor: t.textColor,
   }
 
-  const btnDefs = [
-    ['zoomIn', '+', opts.i18n.buttons.zoomIn || '放大', () => viewer.zoom(0.2)],
-    ['zoomOut', '-', opts.i18n.buttons.zoomOut || '缩小', () => viewer.zoom(-0.2)],
-    ['rotateLeft', '↺', opts.i18n.buttons.rotateLeft || '向左旋转', () => viewer.rotate(-90)],
-    ['rotateRight', '↻', opts.i18n.buttons.rotateRight || '向右旋转', () => viewer.rotate(90)],
-    ['reset', '⌂', opts.i18n.buttons.reset || '重置', () => viewer.reset()],
-    ['download', '↓', opts.i18n.buttons.download || '下载', () => viewer.downloadImage()],
-    ['copy', '⧉', opts.i18n.buttons.copy || '复制', () => viewer.copyImage()],
-    ['fullscreen', '⛶', opts.i18n.buttons.fullscreen || '全屏', () => viewer.toggleFullscreen()],
-    ['info', 'ℹ', opts.i18n.buttons.info || '信息', () => viewer.toggleImageInfo()],
-    ['thumbnails', '☰', opts.i18n.buttons.thumbnails || '缩略图', () => viewer.toggleThumbnails()],
-    ['close', '✕', opts.i18n.buttons.close || '关闭', () => viewer.hide()],
-  ]
+  for (const [key, label, title, handler] of TOOL_BUTTONS) {
+    if (!opts.buttons[key]) continue
+    const btn = createBtn(label, ns + '__tool-btn ' + ns + '__tool-btn--' + key, cfg)
+    btn.title = opts.i18n.buttons[key] || title
+    on(btn, 'click', e => {
+      e.stopPropagation()
+      handler(viewer)
+    })
+    toolbar.appendChild(btn)
+  }
 
-  btnDefs.forEach(([key, label, title, handler]) => {
-    if (opts.buttons[key]) {
-      const btn = createBtn(label, ns + '__tool-btn ' + ns + '__tool-btn--' + key, toolBtnCfg)
-      btn.title = title
-      on(btn, 'click', e => {
-        e.stopPropagation()
-        handler()
-      })
-      toolbar.appendChild(btn)
-    }
-  })
-
-  opts.customButtons.forEach(([label, handler]) => {
-    const btn = createBtn(label, ns + '__tool-btn ' + ns + '__tool-btn--custom', toolBtnCfg)
+  for (const [label, handler] of opts.customButtons) {
+    const btn = createBtn(label, ns + '__tool-btn ' + ns + '__tool-btn--custom', cfg)
     btn.title = label
     on(btn, 'click', e => {
       e.stopPropagation()
       handler.call(viewer)
     })
     toolbar.appendChild(btn)
-  })
+  }
 
   stage.appendChild(toolbar)
   viewer.toolbarEl = toolbar
+}
 
-  container.appendChild(stage)
-  document.body.appendChild(container)
-  viewer.container = container
-  viewer.stage = stage
+// [配置键, 图标, 兜底标题, 动作]
+const TOOL_BUTTONS = [
+  ['zoomIn', '+', '放大', viewer => viewer.zoom(ZOOM_STEP)],
+  ['zoomOut', '-', '缩小', viewer => viewer.zoom(-ZOOM_STEP)],
+  ['rotateLeft', '↺', '向左旋转', viewer => viewer.rotate(-ROTATE_STEP_DEG)],
+  ['rotateRight', '↻', '向右旋转', viewer => viewer.rotate(ROTATE_STEP_DEG)],
+  ['reset', '⌂', '重置', viewer => viewer.reset()],
+  ['download', '↓', '下载', viewer => viewer.downloadImage()],
+  ['copy', '⧉', '复制', viewer => viewer.copyImage()],
+  ['fullscreen', '⛶', '全屏', viewer => viewer.toggleFullscreen()],
+  ['info', 'ℹ', '信息', viewer => viewer.toggleImageInfo()],
+  ['thumbnails', '☰', '缩略图', viewer => viewer.toggleThumbnails()],
+  ['close', '✕', '关闭', viewer => viewer.hide()],
+]
 
-  // 缩略图栏（虚拟列表容器）
-  if (opts.showThumbBar) {
-    const thumbBar = createDiv(ns + '__thumb-bar', {
-      width: '100%',
-      height: t.thumbBarHeight + 'px',
-      flexShrink: '0',
-      background: 'rgba(0,0,0,0.3)',
-      borderTop: '1px solid rgba(255,255,255,0.08)',
-      display: opts.buttons.thumbnails ? 'block' : 'none',
-    })
-    viewer.thumbBar = thumbBar
-    container.appendChild(thumbBar)
-  } else {
+function buildThumbBar(viewer, container) {
+  const opts = viewer.options
+  const ns = opts.className
+  if (!opts.showThumbBar) {
     viewer.thumbBar = null
+    return
   }
 
-  return { container, stage }
+  const thumbBar = createDiv(ns + '__thumb-bar', {
+    width: '100%',
+    height: opts.theme.thumbBarHeight + 'px',
+    flexShrink: '0',
+    background: 'rgba(0,0,0,0.3)',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
+    display: opts.buttons.thumbnails ? 'block' : 'none',
+  })
+  viewer.thumbBar = thumbBar
+  container.appendChild(thumbBar)
 }

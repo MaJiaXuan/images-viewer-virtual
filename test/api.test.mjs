@@ -1,6 +1,6 @@
 /**
  * ImagesViewer 综合测试 — ESM 格式
- * 运行: node --import test/loader.mjs test/api.test.mjs
+ * 运行: pnpm test  或  node --import ./test/register.mjs test/api.test.mjs
  */
 
 import assert from 'assert'
@@ -11,7 +11,8 @@ import './setup.mjs'
 import { VirtualThumbnailList } from '../src/components/virtual-list.js'
 import ImagesViewer from '../src/index.js'
 import { clamp, createDiv, createBtn } from '../src/utils/dom.js'
-import { throttle, rafThrottle } from '../src/utils/throttle.js'
+import { getOrientationTransform, parseExifOrientation } from '../src/utils/exif.js'
+import { throttle } from '../src/utils/throttle.js'
 
 register(pathToFileURL('./test/loader.mjs'))
 
@@ -458,6 +459,247 @@ test('toggleNavButtons() 切换显示', () => {
   v.toggleNavButtons()
   assert.strictEqual(v._navPrevEl.style.display, prevBefore)
   assert.strictEqual(v._navNextEl.style.display, nextBefore)
+  v.hide()
+})
+
+// ===== 12. 动态更新（update） =====
+console.log('\n📦 src/index.js — 动态更新')
+
+test('update() 返回实例（链式调用）', () => {
+  const v = new ImagesViewer({ images: ['a'] })
+  assert.strictEqual(v.update(), v)
+  v.hide()
+})
+
+test('update() 同步新增图片', () => {
+  const v = new ImagesViewer({ images: ['a', 'b'] })
+  v.options.images.push('c')
+  v.update()
+  assert.strictEqual(v.images.length, 3)
+  assert.strictEqual(v.images[2].url, 'c')
+  assert.strictEqual(v.counterEl.textContent, `1 / 3`)
+  v.hide()
+})
+
+test('update() 同步删除图片后的索引收敛', () => {
+  const v = new ImagesViewer({ images: ['a', 'b', 'c'], initialViewIndex: 2 })
+  assert.strictEqual(v.currentIndex, 2)
+  v.options.images.splice(1)
+  v.update()
+  assert.strictEqual(v.images.length, 1)
+  assert.strictEqual(v.currentIndex, 0)
+  assert.strictEqual(v.counterEl.textContent, `1 / 1`)
+  v.hide()
+})
+
+test('update() 整体替换图片后主图 URL 刷新', () => {
+  const v = new ImagesViewer({ images: ['a', 'b'] })
+  v.options.images = ['x', 'y']
+  v.update()
+  assert.strictEqual(v.images.length, 2)
+  assert.strictEqual(v.mainImg.src, 'x')
+  assert.strictEqual(v.images[0].title, '图片 1')
+  v.hide()
+})
+
+test('update() 缩略图池重新渲染（同索引换图）', () => {
+  const v = new ImagesViewer({ images: ['a', 'b'] })
+  v.options.images = ['x', 'y']
+  v.update()
+  // 池对象索引被清空后重跑 onRender，缩略图应指向新 URL
+  const rendered = v.vList.pool.filter(p => p.index !== -1).map(p => p.img.src)
+  assert(rendered.length > 0)
+  assert(rendered.every(src => src === 'x' || src === 'y'))
+  v.hide()
+})
+
+test('update() 图片清空不抛错', () => {
+  const v = new ImagesViewer({ images: ['a', 'b'] })
+  v.options.images = []
+  v.update()
+  assert.strictEqual(v.images.length, 0)
+  assert.strictEqual(v.currentIndex, 0)
+  assert.strictEqual(v.counterEl.textContent, `1 / 0`)
+  v.hide()
+})
+
+test('update() 索引未变时不触发 onChange', () => {
+  let calls = 0
+  const v = new ImagesViewer({
+    images: ['a', 'b'],
+    onChange: () => {
+      calls++
+    },
+  })
+  v.update()
+  assert.strictEqual(calls, 0)
+  v.hide()
+})
+
+test('update() 索引因删除变化时触发 onChange', () => {
+  let data = null
+  const v = new ImagesViewer({
+    images: ['a', 'b', 'c'],
+    initialViewIndex: 2,
+    onChange: d => {
+      data = d
+    },
+  })
+  v.options.images = ['a']
+  v.update()
+  assert(data)
+  assert.strictEqual(data.oldIndex, 2)
+  assert.strictEqual(data.index, 0)
+  assert.strictEqual(data.direction, 'prev')
+  v.hide()
+})
+
+test('update() 当前图片未变化时保留缩放与旋转', () => {
+  const v = new ImagesViewer({ images: ['a'] })
+  v.zoom(0.5)
+  v.rotate(90)
+  v.options.images.push('b')
+  v.update()
+  assert.strictEqual(v.currentIndex, 0)
+  assert.strictEqual(v.scale, 1.5)
+  assert.strictEqual(v.rotation, 90)
+  v.hide()
+})
+
+test('update() 当前图片被替换时重置变换', () => {
+  const v = new ImagesViewer({ images: ['a'] })
+  v.zoom(0.5)
+  v.rotate(90)
+  v.options.images = ['b']
+  v.update()
+  assert.strictEqual(v.scale, 1)
+  assert.strictEqual(v.rotation, 0)
+  v.hide()
+})
+
+test('VirtualThumbnailList.invalidate() 强制重跑渲染', () => {
+  const container = document.createElement('div')
+  let renderCount = 0
+  const list = new VirtualThumbnailList(container, {
+    total: 20,
+    className: 'images-viewer',
+    onRender: () => {
+      renderCount++
+    },
+  })
+  const initial = renderCount
+  assert(initial > 0)
+  // 索引未变时 _render() 会跳过 onRender，invalidate() 必须让它重跑
+  list._render()
+  assert.strictEqual(renderCount, initial)
+  list.invalidate()
+  assert.strictEqual(renderCount, initial * 2)
+  list.destroy()
+})
+
+// ===== EXIF 方向 =====
+console.log('\n📦 utils/exif.js')
+
+/** 构造带 EXIF Orientation 的最小 JPEG ArrayBuffer */
+function buildJpegBuffer({ endian = 'le', orientation } = {}) {
+  const buf = new ArrayBuffer(40)
+  const v = new DataView(buf)
+  const le = endian === 'le'
+  v.setUint16(0, 0xffd8) // SOI
+  v.setUint16(2, 0xffe1) // APP1
+  v.setUint16(4, 34) // 段长度
+  // 'Exif\0\0'
+  ;[0x45, 0x78, 0x69, 0x66, 0x00, 0x00].forEach((b, i) => v.setUint8(6 + i, b))
+  const tiff = 12
+  v.setUint8(tiff, le ? 0x49 : 0x4d)
+  v.setUint8(tiff + 1, le ? 0x49 : 0x4d)
+  v.setUint16(tiff + 2, 0x002a, le)
+  v.setUint32(tiff + 4, 8, le) // IFD0 偏移
+  const ifd = tiff + 8
+  const hasTag = orientation !== undefined
+  v.setUint16(ifd, hasTag ? 1 : 0, le) // 目录项数
+  if (hasTag) {
+    v.setUint16(ifd + 2, 0x0112, le) // Orientation 标签
+    v.setUint16(ifd + 4, 3, le) // SHORT
+    v.setUint32(ifd + 6, 1, le) // count
+    v.setUint16(ifd + 10, orientation, le) // 值
+  }
+  v.setUint32(ifd + 14, 0, le) // 下一 IFD
+  v.setUint16(34, 0xffda) // SOS
+  return buf
+}
+
+test('parseExifOrientation 非 JPEG 返回 undefined', () => {
+  const png = new ArrayBuffer(8)
+  new DataView(png).setUint16(0, 0x8950)
+  assert.strictEqual(parseExifOrientation(png), undefined)
+})
+
+test('parseExifOrientation 过小的 buffer 返回 undefined', () => {
+  assert.strictEqual(parseExifOrientation(new ArrayBuffer(2)), undefined)
+  assert.strictEqual(parseExifOrientation(null), undefined)
+})
+
+test('parseExifOrientation 小端 TIFF 读取 orientation', () => {
+  assert.strictEqual(parseExifOrientation(buildJpegBuffer({ orientation: 6 })), 6)
+})
+
+test('parseExifOrientation 大端 TIFF 读取 orientation', () => {
+  assert.strictEqual(parseExifOrientation(buildJpegBuffer({ endian: 'be', orientation: 8 })), 8)
+})
+
+test('parseExifOrientation 无 Orientation 标签返回 undefined', () => {
+  assert.strictEqual(parseExifOrientation(buildJpegBuffer({})), undefined)
+})
+
+test('parseExifOrientation 非法值（0）返回 undefined', () => {
+  assert.strictEqual(parseExifOrientation(buildJpegBuffer({ orientation: 0 })), undefined)
+})
+
+test('getOrientationTransform 映射', () => {
+  assert.strictEqual(getOrientationTransform(1), '')
+  assert.strictEqual(getOrientationTransform(2), 'scaleX(-1)')
+  assert.strictEqual(getOrientationTransform(3), 'rotate(180deg)')
+  assert.strictEqual(getOrientationTransform(4), 'scaleY(-1)')
+  assert.strictEqual(getOrientationTransform(5), 'rotate(-90deg) scaleX(-1)')
+  assert.strictEqual(getOrientationTransform(6), 'rotate(90deg)')
+  assert.strictEqual(getOrientationTransform(7), 'rotate(90deg) scaleX(-1)')
+  assert.strictEqual(getOrientationTransform(8), 'rotate(-90deg)')
+  assert.strictEqual(getOrientationTransform(undefined), '')
+  assert.strictEqual(getOrientationTransform(9), '')
+})
+
+console.log('\n📦 src/index.js — EXIF 方向')
+
+test('显式 orientation 应用到主图 transform', () => {
+  const v = new ImagesViewer({ images: [{ url: 'a.jpg', orientation: 6 }] })
+  assert(v.mainImg.style.transform.includes('rotate(90deg)'))
+  v.hide()
+})
+
+test('无 orientation 且关闭 autoOrientation 时无方向变换', () => {
+  const v = new ImagesViewer({ images: ['a.jpg'] })
+  assert.strictEqual(v.mainImg.style.transform.includes('rotate(90deg)'), false)
+  v.hide()
+})
+
+test('reset() 保留方向，仅重置用户变换', () => {
+  const v = new ImagesViewer({ images: [{ url: 'a.jpg', orientation: 6 }] })
+  v.zoom(2)
+  v.rotate(45)
+  v.reset()
+  assert(v.mainImg.style.transform.includes('rotate(90deg)'))
+  assert(v.mainImg.style.transform.includes('scale(1)'))
+  v.hide()
+})
+
+test('切换到无方向的图片后清除方向变换', () => {
+  const v = new ImagesViewer({
+    images: [{ url: 'a.jpg', orientation: 6 }, 'b.jpg'],
+  })
+  assert(v.mainImg.style.transform.includes('rotate(90deg)'))
+  v.next()
+  assert.strictEqual(v.mainImg.style.transform.includes('rotate(90deg)'), false)
   v.hide()
 })
 

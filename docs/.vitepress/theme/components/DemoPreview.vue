@@ -70,13 +70,17 @@ const generateImage = `function generateImage(seed, width, height) {
   return canvas.toDataURL('image/png');
 }`
 
-const count = computed(() => typeof props.images === 'string' ? parseInt(props.images) : props.images)
+const count = computed(() =>
+  typeof props.images === 'string' ? parseInt(props.images) : props.images
+)
 
-const imagesArray = computed(() => `Array.from({ length: ${count.value} }, (_, i) => ({
+const imagesArray = computed(
+  () => `Array.from({ length: ${count.value} }, (_, i) => ({
   url: generateImage(i, 1920, 1080),
   thumbnail: generateImage(i, 200, 150),
   title: '图片 ' + (i + 1)
-}))`)
+}))`
+)
 
 const srcdoc = computed(() => {
   const safeCode = props.code.replace(/<\/script>/gi, '<\\/script>')
@@ -165,12 +169,45 @@ const toggle = async () => {
 </script>
 
 <style scoped>
-.demo-preview { margin: 16px 0; border: 1px solid #2a2a3e; border-radius: 8px; overflow: hidden; }
-.demo-toolbar { padding: 12px 16px; background: #1a1a2e; border-bottom: 1px solid #2a2a3e; display: flex; align-items: center; gap: 12px; }
-.demo-btn { padding: 6px 16px; background: #4a9eff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
-.demo-btn:hover { background: #3a8eef; }
-.demo-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.demo-error { color: #ff6b6b; font-size: 13px; }
-.demo-container { background: #0a0a0f; }
-.demo-iframe { width: 100%; display: block; }
+.demo-preview {
+  margin: 16px 0;
+  border: 1px solid #2a2a3e;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.demo-toolbar {
+  padding: 12px 16px;
+  background: #1a1a2e;
+  border-bottom: 1px solid #2a2a3e;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.demo-btn {
+  padding: 6px 16px;
+  background: #4a9eff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.demo-btn:hover {
+  background: #3a8eef;
+}
+.demo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.demo-error {
+  color: #ff6b6b;
+  font-size: 13px;
+}
+.demo-container {
+  background: #0a0a0f;
+}
+.demo-iframe {
+  width: 100%;
+  display: block;
+}
 </style>

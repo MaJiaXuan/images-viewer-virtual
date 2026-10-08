@@ -12,7 +12,7 @@ const demoCode = `new ImagesViewer({
 
 <DemoPreview :code="demoCode" />
 
-`buttons` 选项控制工具栏中各按钮的显示与隐藏。默认全部启用。
+`buttons` 选项控制工具栏中各按钮的显示与隐藏。除 `copy` 默认关闭外，其余均默认启用。
 
 ## 基础配置
 
@@ -25,10 +25,7 @@ const viewer = new ImagesViewer({
     rotateLeft: true, // 左旋
     rotateRight: true, // 右旋
     reset: true, // 重置
-    autoplay: false, // 幻灯片自动播放（默认关闭）
     copy: false, // 复制图片到剪贴板（默认关闭）
-    print: false, // 打印当前图片（默认关闭）
-    annotate: false, // 批注模式（默认关闭）
     download: true, // 下载图片
     fullscreen: true, // 全屏
     prev: true, // 上一张
@@ -68,10 +65,7 @@ const viewer = new ImagesViewer({
     rotateLeft: false,
     rotateRight: false,
     reset: false,
-    autoplay: false,
     copy: false,
-    print: false,
-    annotate: false,
     download: false,
     fullscreen: false,
     prev: false,

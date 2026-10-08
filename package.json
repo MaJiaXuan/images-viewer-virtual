@@ -1,13 +1,15 @@
 {
   "name": "images-viewer-virtual",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "原生图片查看器，支持虚拟列表，可承载上千张图片",
   "main": "dist/images-viewer.umd.js",
   "module": "dist/images-viewer.es.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "!dist/*.gz"
+    "!dist/*.gz",
+    "!dist/*.map",
+    "!dist/stats.html"
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -15,6 +17,7 @@
     "build": "vite build",
     "build:lib": "node scripts/build-lib.js",
     "preview": "vite preview",
+    "test": "node --import ./test/register.mjs test/api.test.mjs",
     "docs:prebuild": "node scripts/build-lib.js && node scripts/copy-dist.js",
     "docs:dev": "pnpm docs:prebuild && vitepress dev docs",
     "docs:build": "pnpm docs:prebuild && vitepress build docs",
@@ -40,7 +43,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MaJiaXuan/images-viewer-virtual.git"
+    "url": "git+https://github.com/MaJiaXuan/images-viewer-virtual.git"
   },
   "homepage": "https://github.com/MaJiaXuan/images-viewer-virtual#readme",
   "bugs": {
@@ -52,9 +55,11 @@
   "devDependencies": {
     "@commitlint/cli": "21.2.3",
     "@commitlint/config-conventional": "21.2.3",
-    "@vitejs/plugin-legacy": "7.2.1",
+    "@eslint/js": "9.25.0",
+    "browserslist-to-esbuild": "2.1.1",
     "eslint": "9.25.0",
     "eslint-plugin-import": "2.31.0",
+    "globals": "14.0.0",
     "husky": "9.1.7",
     "lint-staged": "15.5.0",
     "only-allow": "1.2.1",
@@ -68,11 +73,6 @@
     "vitepress": "1.6.4",
     "vue": "3.5.38"
   },
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ],
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0 <11.0.0"

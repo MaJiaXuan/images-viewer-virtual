@@ -6,6 +6,10 @@
 
 import { on, createDiv, createImg } from '../utils/dom.js'
 
+const HALF = 2 // 取半：itemSize / viewportSize 的一半
+const SIDES = 2 // 缓冲区需同时覆盖列表前后两端
+const EXTRA_VISIBLE = 2 // 可见区额外多算 2 个，抵消滚动取整造成的空白
+
 export class VirtualThumbnailList {
   constructor(container, options) {
     this.container = container
@@ -65,7 +69,7 @@ export class VirtualThumbnailList {
     const rect = this.container.getBoundingClientRect()
     const viewportSize = direction === 'horizontal' ? rect.width : rect.height
     const itemSizeVisible = direction === 'horizontal' ? itemWidth : itemHeight
-    const margin = Math.max(0, Math.round(viewportSize / 2 - itemSizeVisible / 2 - gap))
+    const margin = Math.max(0, Math.round(viewportSize / HALF - itemSizeVisible / HALF - gap))
     this._marginLeft = margin
     this._marginRight = margin
   }
@@ -75,12 +79,11 @@ export class VirtualThumbnailList {
     const rect = this.container.getBoundingClientRect()
     const itemSize = direction === 'horizontal' ? itemWidth + gap : itemHeight + gap
     const viewportSize = direction === 'horizontal' ? rect.width : rect.height
-    this.visibleCount = Math.ceil(viewportSize / itemSize) + 2
-    this.poolSize = this.visibleCount + this.options.buffer * 2
+    this.visibleCount = Math.ceil(viewportSize / itemSize) + EXTRA_VISIBLE
+    this.poolSize = this.visibleCount + this.options.buffer * SIDES
   }
 
   _initPool() {
-    const { itemWidth, itemHeight, gap } = this.options
     const ns = this.options.className
 
     for (let i = 0; i < this.poolSize; i++) {
@@ -145,7 +148,7 @@ export class VirtualThumbnailList {
 
     let start = Math.floor((scrollPos - this._marginLeft) / itemSize)
     start = Math.max(0, start - buffer)
-    let end = start + this.visibleCount + buffer * 2
+    let end = start + this.visibleCount + buffer * SIDES
     end = Math.min(total, end)
 
     const used = new Set()
@@ -222,8 +225,8 @@ export class VirtualThumbnailList {
     const itemSizeVisible = direction === 'horizontal' ? itemWidth : itemHeight
 
     const itemPos = index * itemSize + gap
-    const itemCenter = itemPos + this._marginLeft + itemSizeVisible / 2
-    let scrollPos = itemCenter - viewportSize / 2
+    const itemCenter = itemPos + this._marginLeft + itemSizeVisible / HALF
+    let scrollPos = itemCenter - viewportSize / HALF
 
     const maxScroll = Math.max(0, totalSize + this._marginLeft + this._marginRight - viewportSize)
     scrollPos = Math.max(0, Math.min(scrollPos, maxScroll))
@@ -239,6 +242,18 @@ export class VirtualThumbnailList {
   updateTotal(total) {
     this.options.total = total
     this._updateTotalSize()
+    this._render()
+  }
+
+  /**
+   * 数据源变更后强制重跑渲染。
+   * _render() 对索引未变的池对象会提前 return，因此当缩略图 URL 变化
+   * （图片被整体替换、顺序调整）时必须先清空索引，否则会残留旧图。
+   */
+  invalidate() {
+    this.pool.forEach(p => {
+      p.index = -1
+    })
     this._render()
   }
 

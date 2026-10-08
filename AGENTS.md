@@ -5,11 +5,31 @@
 - 技术栈：Vite + 纯 JavaScript（无 TypeScript）
 - 构建工具：Vite 5+
 - 包管理器：pnpm@9.15.0（Node >= 20）
-- 目标环境：覆盖全球 95% 用户浏览器（详见 .browserslistrc）
+- 目标环境：ESM 产物按 `esnext` 输出（不降级）→ ES2020+；UMD 产物按 `.browserslistrc` 降级语法 → Chrome 60+ / Edge 79+ / Firefox 60+ / Safari 12+ / iOS 12+
+- `.browserslistrc` 是兼容范围的**唯一定义处**（仅 UMD 构建读取）；不要再往 `package.json` 加 `browserslist` 字段，否则 browserslist 会因两处配置冲突而告警
+
+## 相关链接
+
+- 在线 Demo / 文档：https://majiaxuan.github.io/images-viewer-virtual/
+- npm 包：https://www.npmjs.com/package/images-viewer-virtual
+- GitHub 仓库：https://github.com/MaJiaXuan/images-viewer-virtual
+- 文档源码：`docs/`（VitePress），由 `.github/workflows/deploy.yml` 自动部署到 GitHub Pages
+- 本地 Demo：`demo/index.html`（`pnpm dev` 启动）
+
+## 常用命令
+
+| 命令              | 说明                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| `pnpm dev`        | 启动本地开发服务器（打开 `demo/index.html`）                 |
+| `pnpm test`       | 运行 API 测试（纯 Node + 模拟 DOM，无需浏览器）              |
+| `pnpm lint:check` | 仅检查 ESLint，**不修改文件**                                |
+| `pnpm lint`       | 运行 ESLint 并 `--fix`（会直接改写源文件，非必要不用）       |
+| `pnpm build`      | 构建库产物到 `dist/`（含从 `types/index.d.ts` 复制类型声明） |
+| `pnpm docs:build` | 构建 VitePress 文档站                                        |
 
 ## 绝对禁止
 
-- 禁止使用 TypeScript（.ts、类型注解、泛型）
+- 禁止使用 TypeScript 源码（.ts、类型注解、泛型）；`types/index.d.ts` 类型声明除外，它是 `package.json` 中 `types` 字段的唯一源文件，`pnpm build` 时会复制到 `dist/`
 - 禁止使用 var，一律用 const / let
 - 禁止在 components/ 目录写业务逻辑，只放纯展示组件
 - 禁止相对路径 ../../ 超过 2 层，超过必须用 @/ 别名
@@ -77,7 +97,9 @@ views/ 页面组件
 
 ## 构建约束
 
-- 目标：esnext
+- 目标：ESM 为 `esnext`；UMD 由 `downlevel-umd` 插件按 `.browserslistrc` 降级（esbuild target 只接受**数组**形式，逗号拼接的字符串会报 Invalid target）
+- UMD 产物中不得出现 `?.` / `??` 等 ES2020+ 语法：构建自带自检（用 `es2019` 再降一次比对），残留会直接中断构建
+- 不要用 `@vitejs/plugin-legacy` 处理 UMD：它面向 HTML 应用（注入 `<script nomodule>` + SystemJS chunk），对 `<script src>` 引入的库不适用，已于 1.0.3 移除
 - 压缩：terser
 - 小于 4KB 资源内联，超过走 URL
 - 单 chunk 超过 500KB 必须拆分
